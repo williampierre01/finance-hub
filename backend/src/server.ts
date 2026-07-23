@@ -1,16 +1,7 @@
-import express from "express";
-
-const app = express();
+import { app } from "./app";
 
 const PORT = 3001;
 
-app.get("/health", (_req, res) => {
-  res.json({
-    status: "ok",
-    message: "FinanceHub API está funcionando 🚀",
-  });
-});
-
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
