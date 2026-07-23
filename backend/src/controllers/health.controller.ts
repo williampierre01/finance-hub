@@ -7,3 +7,7 @@ export function healthController(_req: Request, res: Response) {
     timestamp: new Date().toISOString(),
   });
 }
+
+export function errorTestController(_req: Request, res: Response) {
+  throw new Error("Erro proposital para testes");
+}
