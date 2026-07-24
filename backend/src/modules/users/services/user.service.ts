@@ -1,4 +1,4 @@
-import { AppError } from "../utils/app-error";
+import { AppError } from "../../../errors/app-error";
 import { User } from "../types/user";
 
 const users: User[] = [];
