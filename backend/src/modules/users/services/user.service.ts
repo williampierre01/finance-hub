@@ -1,9 +1,15 @@
 import { AppError } from "../../../errors/app-error";
-import { User } from "../types/user";
+import { prisma } from "../../../database/prisma";
 
-const users: User[] = [];
+interface CreateUserData {
+  name: string;
+  email: string;
+}
 
-export function createUser(name: string, email: string): User {
+export async function createUser({
+  name,
+  email,
+}: CreateUserData) {
   if (!name || !name.trim()) {
     throw new AppError("O nome é obrigatório");
   }
@@ -14,25 +20,30 @@ export function createUser(name: string, email: string): User {
 
   const normalizedEmail = email.trim().toLowerCase();
 
-  const emailAlreadyExists = users.some(
-    (user) => user.email === normalizedEmail
-  );
+  const emailAlreadyExists = await prisma.user.findUnique({
+    where: {
+      email: normalizedEmail,
+    },
+  });
 
   if (emailAlreadyExists) {
     throw new AppError("E-mail já cadastrado", 409);
   }
 
-  const user: User = {
-    id: crypto.randomUUID(),
-    name: name.trim(),
-    email: normalizedEmail,
-  };
-
-  users.push(user);
+  const user = await prisma.user.create({
+    data: {
+      name: name.trim(),
+      email: normalizedEmail,
+    },
+  });
 
   return user;
 }
 
-export function getUsers(): User[] {
-  return users;
+export async function listUsers() {
+  return prisma.user.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 }
