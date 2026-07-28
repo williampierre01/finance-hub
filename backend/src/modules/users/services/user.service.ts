@@ -1,5 +1,10 @@
 import { AppError } from "../../../errors/app-error";
-import { prisma } from "../../../database/prisma";
+
+import {
+  createUser as createUserRepository,
+  findUserByEmail,
+  listUsers as listUsersRepository,
+} from "../repositories/user.repository";
 
 interface CreateUserData {
   name: string;
@@ -20,30 +25,18 @@ export async function createUser({
 
   const normalizedEmail = email.trim().toLowerCase();
 
-  const emailAlreadyExists = await prisma.user.findUnique({
-    where: {
-      email: normalizedEmail,
-    },
-  });
+  const emailAlreadyExists = await findUserByEmail(normalizedEmail);
 
   if (emailAlreadyExists) {
     throw new AppError("E-mail já cadastrado", 409);
   }
 
-  const user = await prisma.user.create({
-    data: {
-      name: name.trim(),
-      email: normalizedEmail,
-    },
+  return createUserRepository({
+    name: name.trim(),
+    email: normalizedEmail,
   });
-
-  return user;
 }
 
 export async function listUsers() {
-  return prisma.user.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  return listUsersRepository();
 }
