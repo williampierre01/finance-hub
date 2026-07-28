@@ -1,6 +1,11 @@
 import { TransactionType } from "../../../generated/prisma/client";
-import { prisma } from "../../../database/prisma";
 import { AppError } from "../../../errors/app-error";
+
+import {
+  createTransaction as createTransactionRepository,
+  findUserById,
+  listTransactions as listTransactionsRepository,
+} from "../repositories/transaction.repository";
 
 interface CreateTransactionData {
   userId: string;
@@ -35,36 +40,26 @@ export async function createTransaction(
     throw new AppError("A categoria é obrigatória");
   }
 
-  const userExists = await prisma.user.findUnique({
-    where: {
-      id: userId.trim(),
-    },
-  });
+  const normalizedUserId = userId.trim();
+
+  const userExists = await findUserById(normalizedUserId);
 
   if (!userExists) {
     throw new AppError("Usuário não encontrado", 404);
   }
 
-  const transaction = await prisma.transaction.create({
-    data: {
-      userId: userId.trim(),
-      title: title.trim(),
-      amount,
-      type:
-        type === "income"
-          ? TransactionType.INCOME
-          : TransactionType.EXPENSE,
-      category: category.trim(),
-    },
+  return createTransactionRepository({
+    userId: normalizedUserId,
+    title: title.trim(),
+    amount,
+    type:
+      type === "income"
+        ? TransactionType.INCOME
+        : TransactionType.EXPENSE,
+    category: category.trim(),
   });
-
-  return transaction;
 }
 
 export async function listTransactions() {
-  return prisma.transaction.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  return listTransactionsRepository();
 }
