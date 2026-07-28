@@ -5,20 +5,20 @@ import {
   listTransactions as listTransactionsService,
 } from "../services/transaction.service";
 
-export function createTransaction(
+export async function createTransaction(
   request: Request,
   response: Response
-): Response {
-  const transaction = createTransactionService(request.body);
+): Promise<Response> {
+  const transaction = await createTransactionService(request.body);
 
   return response.status(201).json(transaction);
 }
 
-export function listTransactions(
+export async function listTransactions(
   request: Request,
   response: Response
-): Response {
-  const transactions = listTransactionsService();
+): Promise<Response> {
+  const transactions = await listTransactionsService();
 
   return response.status(200).json(transactions);
 }

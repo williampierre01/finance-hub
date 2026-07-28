@@ -1,8 +1,6 @@
+import { TransactionType } from "../../../generated/prisma/client";
+import { prisma } from "../../../database/prisma";
 import { AppError } from "../../../errors/app-error";
-import {
-  Transaction,
-  TransactionType,
-} from "../types/transaction";
 
 interface CreateTransactionData {
   userId: string;
@@ -12,11 +10,9 @@ interface CreateTransactionData {
   category: string;
 }
 
-const transactions: Transaction[] = [];
-
-export function createTransaction(
+export async function createTransaction(
   data: CreateTransactionData
-): Transaction {
+) {
   const { userId, title, amount, type, category } = data;
 
   if (!userId || !userId.trim()) {
@@ -32,30 +28,43 @@ export function createTransaction(
   }
 
   if (type !== "income" && type !== "expense") {
-    throw new AppError(
-      "O tipo deve ser income ou expense"
-    );
+    throw new AppError("O tipo deve ser income ou expense");
   }
 
   if (!category || !category.trim()) {
     throw new AppError("A categoria é obrigatória");
   }
 
-  const transaction: Transaction = {
-    id: crypto.randomUUID(),
-    userId: userId.trim(),
-    title: title.trim(),
-    amount,
-    type: type as TransactionType,
-    category: category.trim(),
-    createdAt: new Date().toISOString(),
-  };
+  const userExists = await prisma.user.findUnique({
+    where: {
+      id: userId.trim(),
+    },
+  });
 
-  transactions.push(transaction);
+  if (!userExists) {
+    throw new AppError("Usuário não encontrado", 404);
+  }
+
+  const transaction = await prisma.transaction.create({
+    data: {
+      userId: userId.trim(),
+      title: title.trim(),
+      amount,
+      type:
+        type === "income"
+          ? TransactionType.INCOME
+          : TransactionType.EXPENSE,
+      category: category.trim(),
+    },
+  });
 
   return transaction;
 }
 
-export function listTransactions(): Transaction[] {
-  return transactions;
+export async function listTransactions() {
+  return prisma.transaction.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 }

@@ -1,16 +1,24 @@
 import { Request, Response } from "express";
-import { createUser, getUsers } from "../services/user.service";
 
-export function createUserController(req: Request, res: Response) {
-  const { name, email } = req.body;
+import {
+  createUser as createUserService,
+  listUsers as listUsersService,
+} from "../services/user.service";
 
-  const user = createUser(name, email);
+export async function createUser(
+  request: Request,
+  response: Response
+): Promise<Response> {
+  const user = await createUserService(request.body);
 
-  return res.status(201).json(user);
+  return response.status(201).json(user);
 }
 
-export function listUsersController(_req: Request, res: Response) {
-  const users = getUsers();
+export async function listUsers(
+  request: Request,
+  response: Response
+): Promise<Response> {
+  const users = await listUsersService();
 
-  return res.status(200).json(users);
+  return response.status(200).json(users);
 }
