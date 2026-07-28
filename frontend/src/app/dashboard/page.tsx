@@ -1,61 +1,42 @@
 import Link from "next/link";
 
+import { PageHeader } from "@/components/page-header";
+import { SummaryCard } from "@/components/summary-card";
+
 export default function DashboardPage() {
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-16 text-slate-100">
-      <section className="mx-auto max-w-6xl">
-        <Link
-          href="/"
-          className="mb-8 inline-block text-sm font-semibold text-slate-400 transition hover:text-emerald-400"
-        >
-          ← Voltar para o início
-        </Link>
+    <>
+      <Link
+        href="/"
+        className="mb-8 inline-block text-sm font-semibold text-slate-400 transition hover:text-emerald-400"
+      >
+        ← Voltar para o início
+      </Link>
 
-        <span className="block text-sm font-semibold uppercase tracking-[0.3em] text-emerald-400">
-          Visão geral
-        </span>
+      <PageHeader
+        eyebrow="Visão geral"
+        title="Dashboard financeiro"
+        description="Aqui você acompanhará seu saldo, receitas, despesas e transações recentes."
+      />
 
-        <h1 className="mt-4 text-4xl font-bold">
-          Dashboard financeiro
-        </h1>
+      <div className="mt-10 grid gap-6 md:grid-cols-3">
+        <SummaryCard
+          title="Saldo atual"
+          value="R$ 0,00"
+        />
 
-        <p className="mt-4 max-w-2xl text-slate-400">
-          Aqui você acompanhará seu saldo, receitas, despesas e transações
-          recentes.
-        </p>
+        <SummaryCard
+          title="Receitas"
+          value="R$ 0,00"
+          valueClassName="text-emerald-400"
+        />
 
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <span className="text-sm text-slate-400">
-              Saldo atual
-            </span>
-
-            <strong className="mt-3 block text-3xl">
-              R$ 0,00
-            </strong>
-          </article>
-
-          <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <span className="text-sm text-slate-400">
-              Receitas
-            </span>
-
-            <strong className="mt-3 block text-3xl text-emerald-400">
-              R$ 0,00
-            </strong>
-          </article>
-
-          <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <span className="text-sm text-slate-400">
-              Despesas
-            </span>
-
-            <strong className="mt-3 block text-3xl text-red-400">
-              R$ 0,00
-            </strong>
-          </article>
-        </div>
-      </section>
-    </main>
+        <SummaryCard
+          title="Despesas"
+          value="R$ 0,00"
+          valueClassName="text-red-400"
+        />
+      </div>
+    </>
   );
 }
