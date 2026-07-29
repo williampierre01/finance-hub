@@ -1,7 +1,13 @@
 import { AppError } from "../../../errors/app-error";
 import { comparePassword } from "../../../security/password";
 import { createAccessToken } from "../../../security/token";
-import { findUserByEmail } from "../../users/repositories/user.repository";
+import {
+  findUserByEmail,
+  findUserById,
+} from "../../users/repositories/user.repository";
+
+
+
 
 interface LoginData {
   email: string;
@@ -49,4 +55,17 @@ export async function login({
     },
     accessToken,
   };
+}
+
+export async function getAuthenticatedUser(userId: string) {
+  const user = await findUserById(userId);
+
+  if (!user) {
+    throw new AppError(
+      "Usuário autenticado não encontrado",
+      401,
+    );
+  }
+
+  return user;
 }
