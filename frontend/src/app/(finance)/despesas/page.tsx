@@ -1,4 +1,4 @@
-import { FilteredTransactionList } from "@/components/filtered-transaction-list";
+import { ExpensePageContent } from "@/components/expense-page-content";
 import { PageHeader } from "@/components/page-header";
 
 export default function DespesasPage() {
@@ -7,13 +7,10 @@ export default function DespesasPage() {
       <PageHeader
         eyebrow="Saídas"
         title="Despesas"
-        description="Consulte todas as despesas cadastradas no FinanceHub."
+        description="Cadastre e consulte todas as despesas do FinanceHub."
       />
 
-      <FilteredTransactionList
-        type="EXPENSE"
-        emptyMessage="Nenhuma despesa cadastrada."
-      />
+      <ExpensePageContent />
     </>
   );
 }
