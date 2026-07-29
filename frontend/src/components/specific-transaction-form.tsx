@@ -1,6 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import type { FormEvent } from "react";
+import { useState } from "react";
+
+import { FormMessage } from "@/components/form-message";
 
 type TransactionType = "INCOME" | "EXPENSE";
 
@@ -134,7 +137,7 @@ export function SpecificTransactionForm({
   }
 
   return (
-    <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+    <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
       <h2 className="text-xl font-bold text-slate-100">{title}</h2>
 
       <form
@@ -215,25 +218,30 @@ export function SpecificTransactionForm({
         </div>
 
         <div className="md:col-span-2">
-          {errorMessage && (
-            <p className="mb-4 text-sm font-medium text-red-400">
-              {errorMessage}
-            </p>
-          )}
+          <div className="space-y-3">
+            {errorMessage && (
+              <FormMessage
+                type="error"
+                message={errorMessage}
+              />
+            )}
 
-          {successMessage && (
-            <p className="mb-4 text-sm font-medium text-emerald-400">
-              {successMessage}
-            </p>
-          )}
+            {successMessage && (
+              <FormMessage
+                type="success"
+                message={successMessage}
+              />
+            )}
+          </div>
 
           <button
             type="submit"
             disabled={isSubmitting}
+            aria-busy={isSubmitting}
             className={
               isIncome
-                ? "rounded-lg bg-emerald-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-                : "rounded-lg bg-red-500 px-5 py-3 font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-60"
+                ? "mt-4 w-full rounded-lg bg-emerald-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                : "mt-4 w-full rounded-lg bg-red-500 px-5 py-3 font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             }
           >
             {isSubmitting ? "Salvando..." : submitLabel}
