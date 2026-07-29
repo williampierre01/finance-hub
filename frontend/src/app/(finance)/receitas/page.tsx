@@ -1,4 +1,4 @@
-import { FilteredTransactionList } from "@/components/filtered-transaction-list";
+import { IncomePageContent } from "@/components/income-page-content";
 import { PageHeader } from "@/components/page-header";
 
 export default function ReceitasPage() {
@@ -7,13 +7,10 @@ export default function ReceitasPage() {
       <PageHeader
         eyebrow="Entradas"
         title="Receitas"
-        description="Consulte todas as receitas cadastradas no FinanceHub."
+        description="Cadastre e consulte todas as receitas do FinanceHub."
       />
 
-      <FilteredTransactionList
-        type="INCOME"
-        emptyMessage="Nenhuma receita cadastrada."
-      />
+      <IncomePageContent />
     </>
   );
 }
