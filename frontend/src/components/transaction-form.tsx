@@ -2,37 +2,94 @@
 
 import { FormEvent, useState } from "react";
 
-export function TransactionForm() {
+interface ApiError {
+  message?: string;
+}
+
+interface TransactionFormProps {
+  onTransactionCreated: () => void;
+}
+
+export function TransactionForm({
+  onTransactionCreated,
+}: TransactionFormProps) {
+  const [userId, setUserId] = useState("");
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
+  const [type, setType] = useState("expense");
+  const [category, setCategory] = useState("");
+
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
-    if (!title.trim() || !amount) {
-      setMessage("Preencha o título e o valor da transação.");
-      return;
-    }
+    setMessage("");
 
     const numericAmount = Number(amount);
 
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-      setMessage("Informe um valor maior que zero.");
+    if (
+      !userId.trim() ||
+      !title.trim() ||
+      !category.trim() ||
+      !Number.isFinite(numericAmount) ||
+      numericAmount <= 0
+    ) {
+      setMessage("Preencha todos os campos corretamente.");
       return;
     }
 
-    const formattedAmount = numericAmount.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-    setMessage(
-      `Transação "${title.trim()}" no valor de ${formattedAmount} registrada.`
-    );
+    if (!apiUrl) {
+      setMessage("A URL da API não foi configurada.");
+      return;
+    }
 
-    setTitle("");
-    setAmount("");
+    try {
+      setIsSubmitting(true);
+
+      const response = await fetch(`${apiUrl}/transactions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: userId.trim(),
+          title: title.trim(),
+          amount: numericAmount,
+          type,
+          category: category.trim(),
+        }),
+      });
+
+      const data = (await response.json()) as ApiError;
+
+      if (!response.ok) {
+        setMessage(data.message ?? "Não foi possível salvar a transação.");
+        return;
+      }
+
+      const formattedAmount = numericAmount.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      });
+
+      setMessage(
+        `Transação "${title.trim()}" no valor de ${formattedAmount} salva no banco.`
+      );
+
+      onTransactionCreated();
+
+      setTitle("");
+      setAmount("");
+      setCategory("");
+      setType("expense");
+    } catch {
+      setMessage("Não foi possível conectar ao backend.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -43,10 +100,25 @@ export function TransactionForm() {
       <h2 className="text-xl font-bold">Nova transação</h2>
 
       <div className="mt-6 grid gap-5 sm:grid-cols-2">
-        <label className="flex flex-col gap-2">
+        <label className="flex flex-col gap-2 sm:col-span-2">
           <span className="text-sm font-medium text-slate-300">
-            Título
+            ID do usuário
           </span>
+
+          <input
+            type="text"
+            value={userId}
+            onChange={(event) => {
+              setUserId(event.target.value);
+              setMessage("");
+            }}
+            placeholder="Cole o ID de um usuário existente"
+            className="rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 outline-none transition focus:border-emerald-500"
+          />
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-slate-300">Título</span>
 
           <input
             type="text"
@@ -55,15 +127,13 @@ export function TransactionForm() {
               setTitle(event.target.value);
               setMessage("");
             }}
-            placeholder="Ex.: Salário"
+            placeholder="Ex.: Supermercado"
             className="rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 outline-none transition focus:border-emerald-500"
           />
         </label>
 
         <label className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-slate-300">
-            Valor
-          </span>
+          <span className="text-sm font-medium text-slate-300">Valor</span>
 
           <input
             type="number"
@@ -78,19 +148,53 @@ export function TransactionForm() {
             className="rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 outline-none transition focus:border-emerald-500"
           />
         </label>
+
+        <label className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-slate-300">Tipo</span>
+
+          <select
+            value={type}
+            onChange={(event) => {
+              setType(event.target.value);
+              setMessage("");
+            }}
+            className="rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 outline-none transition focus:border-emerald-500"
+          >
+            <option value="income">Receita</option>
+            <option value="expense">Despesa</option>
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-slate-300">
+            Categoria
+          </span>
+
+          <input
+            type="text"
+            value={category}
+            onChange={(event) => {
+              setCategory(event.target.value);
+              setMessage("");
+            }}
+            placeholder="Ex.: Alimentação"
+            className="rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 outline-none transition focus:border-emerald-500"
+          />
+        </label>
       </div>
 
       {message && (
-        <p className="mt-6 rounded-lg border border-emerald-800 bg-emerald-950 px-4 py-3 text-sm text-emerald-300">
+        <p className="mt-6 rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-200">
           {message}
         </p>
       )}
 
       <button
         type="submit"
-        className="mt-6 rounded-lg bg-emerald-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400"
+        disabled={isSubmitting}
+        className="mt-6 rounded-lg bg-emerald-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        Salvar transação
+        {isSubmitting ? "Salvando..." : "Salvar transação"}
       </button>
     </form>
   );
