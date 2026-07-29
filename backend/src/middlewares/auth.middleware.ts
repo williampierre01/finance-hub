@@ -7,6 +7,8 @@ import type {
 import { AppError } from "../errors/app-error";
 import { verifyAccessToken } from "../security/token";
 
+const AUTH_COOKIE_NAME = "financehub_token";
+
 export function ensureAuthenticated(
   request: Request,
   response: Response,
@@ -14,14 +16,21 @@ export function ensureAuthenticated(
 ) {
   const authorizationHeader = request.headers.authorization;
 
-  if (!authorizationHeader) {
-    throw new AppError("Token de autenticação não informado", 401);
-  }
+  const bearerToken = authorizationHeader?.startsWith("Bearer ")
+    ? authorizationHeader.slice(7).trim()
+    : undefined;
 
-  const [scheme, token] = authorizationHeader.split(" ");
+  const cookieToken = request.cookies?.[AUTH_COOKIE_NAME] as
+    | string
+    | undefined;
 
-  if (scheme !== "Bearer" || !token) {
-    throw new AppError("Token de autenticação inválido", 401);
+  const token = bearerToken || cookieToken;
+
+  if (!token) {
+    throw new AppError(
+      "Token de autenticação não informado",
+      401,
+    );
   }
 
   try {
@@ -31,7 +40,10 @@ export function ensureAuthenticated(
       typeof decodedToken === "string" ||
       !decodedToken.sub
     ) {
-      throw new AppError("Token de autenticação inválido", 401);
+      throw new AppError(
+        "Token de autenticação inválido",
+        401,
+      );
     }
 
     response.locals.userId = decodedToken.sub;
@@ -42,6 +54,9 @@ export function ensureAuthenticated(
       throw error;
     }
 
-    throw new AppError("Token inválido ou expirado", 401);
+    throw new AppError(
+      "Token inválido ou expirado",
+      401,
+    );
   }
 }
