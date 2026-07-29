@@ -1,10 +1,12 @@
 import "dotenv/config";
 
 import { PrismaPg } from "@prisma/adapter-pg";
+
 import {
   PrismaClient,
   TransactionType,
 } from "../src/generated/prisma/client";
+import { hashPassword } from "../src/security/password";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -21,16 +23,21 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
+  const demoPassword = "FinanceHub@123";
+  const demoPasswordHash = await hashPassword(demoPassword);
+
   const user = await prisma.user.upsert({
     where: {
       email: "demo@financehub.com",
     },
     update: {
       name: "Usuário Demo",
+      passwordHash: demoPasswordHash,
     },
     create: {
       name: "Usuário Demo",
       email: "demo@financehub.com",
+      passwordHash: demoPasswordHash,
     },
   });
 
@@ -68,6 +75,7 @@ async function main() {
 
   console.log("Seed executado com sucesso.");
   console.log(`Usuário: ${user.email}`);
+  console.log(`Senha de desenvolvimento: ${demoPassword}`);
 }
 
 main()
