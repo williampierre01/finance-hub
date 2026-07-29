@@ -1,5 +1,14 @@
 import { prisma } from "../../../database/prisma";
 
+export function findUserById(userId: string) {
+  return prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: publicUserFields,
+  });
+}
+
 interface CreateUserData {
   name: string;
   email: string;
