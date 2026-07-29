@@ -1,9 +1,7 @@
 import Link from "next/link";
 
+import { DashboardContent } from "@/components/dashboard-content";
 import { PageHeader } from "@/components/page-header";
-import { SummaryCard } from "@/components/summary-card";
-import { TransactionCounter } from "@/components/transaction-counter";
-import { TransactionsSection } from "@/components/transactions-section";
 
 export default function DashboardPage() {
   return (
@@ -21,28 +19,7 @@ export default function DashboardPage() {
         description="Aqui você acompanhará seu saldo, receitas, despesas e transações recentes."
       />
 
-      <div className="mt-10 grid gap-6 md:grid-cols-3">
-        <SummaryCard
-          title="Saldo atual"
-          value="R$ 0,00"
-        />
-
-        <SummaryCard
-          title="Receitas"
-          value="R$ 0,00"
-          valueClassName="text-emerald-400"
-        />
-
-        <SummaryCard
-          title="Despesas"
-          value="R$ 0,00"
-          valueClassName="text-red-400"
-        />
-      </div>
-
-      <TransactionCounter />
-
-      <TransactionsSection />
+      <DashboardContent />
     </>
   );
 }

@@ -1,121 +1,118 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-interface Transaction {
-  id: string;
-  title: string;
-  amount: string;
-  type: "INCOME" | "EXPENSE";
-  category: string;
-  createdAt: string;
-}
+import type { Transaction } from "@/components/dashboard-content";
 
 interface TransactionListProps {
-  refreshKey: number;
+  transactions: Transaction[];
+  isLoading: boolean;
+  errorMessage: string;
+  onRetry: () => void;
 }
 
 export function TransactionList({
-  refreshKey,
+  transactions,
+  isLoading,
+  errorMessage,
+  onRetry,
 }: TransactionListProps) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [message, setMessage] = useState("Carregando transações...");
+  if (isLoading) {
+    return (
+      <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+        <h2 className="text-xl font-bold">Transações recentes</h2>
 
-  useEffect(() => {
-    async function loadTransactions() {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        <p className="mt-6 text-sm text-slate-400">
+          Carregando transações...
+        </p>
+      </section>
+    );
+  }
 
-      if (!apiUrl) {
-        setMessage("A URL da API não foi configurada.");
-        return;
-      }
+  if (errorMessage) {
+    return (
+      <section className="mt-10 rounded-2xl border border-red-900 bg-red-950/30 p-6">
+        <h2 className="text-xl font-bold text-red-300">
+          Não foi possível carregar as transações
+        </h2>
 
-      try {
-        setMessage("Carregando transações...");
+        <p className="mt-3 text-sm text-red-200">
+          {errorMessage}
+        </p>
 
-        const response = await fetch(`${apiUrl}/transactions`);
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-6 rounded-lg bg-red-400 px-4 py-2 font-semibold text-red-950 transition hover:bg-red-300"
+        >
+          Tentar novamente
+        </button>
+      </section>
+    );
+  }
 
-        if (!response.ok) {
-          setMessage("Não foi possível carregar as transações.");
-          return;
-        }
+  if (transactions.length === 0) {
+    return (
+      <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+        <h2 className="text-xl font-bold">Transações recentes</h2>
 
-        const data = (await response.json()) as Transaction[];
-
-        setTransactions(data);
-        setMessage(
-          data.length === 0
-            ? "Nenhuma transação cadastrada."
-            : ""
-        );
-      } catch {
-        setMessage("Não foi possível conectar ao backend.");
-      }
-    }
-
-    loadTransactions();
-  }, [refreshKey]);
+        <p className="mt-6 text-sm text-slate-400">
+          Nenhuma transação cadastrada.
+        </p>
+      </section>
+    );
+  }
 
   return (
     <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-6">
       <h2 className="text-xl font-bold">Transações recentes</h2>
 
-      {message && (
-        <p className="mt-6 text-sm text-slate-400">
-          {message}
-        </p>
-      )}
+      <div className="mt-6 space-y-4">
+        {transactions.map((transaction) => {
+          const formattedAmount = Number(
+            transaction.amount
+          ).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          });
 
-      {transactions.length > 0 && (
-        <div className="mt-6 space-y-4">
-          {transactions.map((transaction) => {
-            const formattedAmount = Number(
-              transaction.amount
-            ).toLocaleString("pt-BR", {
-              style: "currency",
-              currency: "BRL",
-            });
+          const isIncome = transaction.type === "INCOME";
 
-            const isIncome = transaction.type === "INCOME";
+          return (
+            <article
+              key={transaction.id}
+              className="flex flex-col gap-4 rounded-xl border border-slate-800 bg-slate-950 p-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <strong className="block text-slate-100">
+                  {transaction.title}
+                </strong>
 
-            return (
-              <article
-                key={transaction.id}
-                className="flex flex-col gap-4 rounded-xl border border-slate-800 bg-slate-950 p-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <strong className="block text-slate-100">
-                    {transaction.title}
-                  </strong>
+                <span className="mt-1 block text-sm text-slate-400">
+                  {transaction.category}
+                </span>
+              </div>
 
-                  <span className="mt-1 block text-sm text-slate-400">
-                    {transaction.category}
-                  </span>
-                </div>
+              <div className="sm:text-right">
+                <strong
+                  className={
+                    isIncome
+                      ? "text-emerald-400"
+                      : "text-red-400"
+                  }
+                >
+                  {isIncome ? "+ " : "- "}
+                  {formattedAmount}
+                </strong>
 
-                <div className="sm:text-right">
-                  <strong
-                    className={
-                      isIncome
-                        ? "text-emerald-400"
-                        : "text-red-400"
-                    }
-                  >
-                    {isIncome ? "+ " : "- "}
-                    {formattedAmount}
-                  </strong>
-
-                  <span className="mt-1 block text-xs text-slate-500">
-                    {new Date(
-                      transaction.createdAt
-                    ).toLocaleDateString("pt-BR")}
-                  </span>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
+                <span className="mt-1 block text-xs text-slate-500">
+                  {new Date(
+                    transaction.createdAt
+                  ).toLocaleDateString("pt-BR")}
+                </span>
+              </div>
+            </article>
+          );
+        })}
+      </div>
     </section>
   );
 }
