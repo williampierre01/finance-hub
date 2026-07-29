@@ -1,6 +1,7 @@
 "use client";
 
 import type { Transaction } from "@/components/dashboard-content";
+import { TransactionListLoading } from "@/components/transaction-list-loading";
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -16,32 +17,24 @@ export function TransactionList({
   onRetry,
 }: TransactionListProps) {
   if (isLoading) {
-    return (
-      <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-        <h2 className="text-xl font-bold">Transações recentes</h2>
-
-        <p className="mt-6 text-sm text-slate-400">
-          Carregando transações...
-        </p>
-      </section>
-    );
+    return <TransactionListLoading />;
   }
 
   if (errorMessage) {
     return (
-      <section className="mt-10 rounded-2xl border border-red-900 bg-red-950/30 p-6">
+      <section className="mt-10 rounded-2xl border border-red-900 bg-red-950/30 p-4 sm:p-6">
         <h2 className="text-xl font-bold text-red-300">
           Não foi possível carregar as transações
         </h2>
 
-        <p className="mt-3 text-sm text-red-200">
+        <p role="alert" className="mt-3 text-sm text-red-200">
           {errorMessage}
         </p>
 
         <button
           type="button"
           onClick={onRetry}
-          className="mt-6 rounded-lg bg-red-400 px-4 py-2 font-semibold text-red-950 transition hover:bg-red-300"
+          className="mt-6 w-full rounded-lg bg-red-400 px-4 py-2 font-semibold text-red-950 transition hover:bg-red-300 sm:w-auto"
         >
           Tentar novamente
         </button>
@@ -51,7 +44,7 @@ export function TransactionList({
 
   if (transactions.length === 0) {
     return (
-      <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+      <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
         <h2 className="text-xl font-bold">Transações recentes</h2>
 
         <p className="mt-6 text-sm text-slate-400">
@@ -62,13 +55,13 @@ export function TransactionList({
   }
 
   return (
-    <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+    <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
       <h2 className="text-xl font-bold">Transações recentes</h2>
 
       <div className="mt-6 space-y-4">
         {transactions.map((transaction) => {
           const formattedAmount = Number(
-            transaction.amount
+            transaction.amount,
           ).toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",
@@ -104,9 +97,9 @@ export function TransactionList({
                 </strong>
 
                 <span className="mt-1 block text-xs text-slate-500">
-                  {new Date(
-                    transaction.createdAt
-                  ).toLocaleDateString("pt-BR")}
+                  {new Date(transaction.createdAt).toLocaleDateString(
+                    "pt-BR",
+                  )}
                 </span>
               </div>
             </article>
