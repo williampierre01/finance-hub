@@ -1,14 +1,21 @@
+import cors from "cors";
 import express from "express";
-import routes from "./routes";
+
 import { errorHandler } from "./middlewares/error.middleware";
+import router from "./routes";
 
 const app = express();
 
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+  })
+);
+
 app.use(express.json());
 
-app.use(routes);
+app.use(router);
 
-// Middleware de tratamento de erros (sempre após as rotas)
 app.use(errorHandler);
 
 export { app };

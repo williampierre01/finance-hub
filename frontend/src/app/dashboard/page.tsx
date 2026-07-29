@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { SummaryCard } from "@/components/summary-card";
 import { TransactionCounter } from "@/components/transaction-counter";
-import { TransactionForm } from "@/components/transaction-form";
+import { TransactionsSection } from "@/components/transactions-section";
 
 export default function DashboardPage() {
   return (
@@ -42,7 +42,7 @@ export default function DashboardPage() {
 
       <TransactionCounter />
 
-      <TransactionForm />
+      <TransactionsSection />
     </>
   );
 }
