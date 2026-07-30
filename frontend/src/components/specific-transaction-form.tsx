@@ -31,8 +31,6 @@ const initialFormData: FormData = {
   category: "",
 };
 
-const USER_ID = "8c03858f-a3c9-47b9-ad03-f783ae511583";
-
 export function SpecificTransactionForm({
   type,
   title,
@@ -46,7 +44,10 @@ export function SpecificTransactionForm({
 
   const isIncome = type === "INCOME";
 
-  function handleInputChange(field: keyof FormData, value: string) {
+  function handleInputChange(
+    field: keyof FormData,
+    value: string,
+  ) {
     setFormData((currentFormData) => ({
       ...currentFormData,
       [field]: value,
@@ -56,7 +57,9 @@ export function SpecificTransactionForm({
     setSuccessMessage("");
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -92,11 +95,11 @@ export function SpecificTransactionForm({
 
       const response = await fetch(`${apiUrl}/transactions`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: USER_ID,
           title: trimmedTitle,
           amount,
           category: trimmedCategory,
@@ -138,7 +141,9 @@ export function SpecificTransactionForm({
 
   return (
     <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
-      <h2 className="text-xl font-bold text-slate-100">{title}</h2>
+      <h2 className="text-xl font-bold text-slate-100">
+        {title}
+      </h2>
 
       <form
         onSubmit={handleSubmit}

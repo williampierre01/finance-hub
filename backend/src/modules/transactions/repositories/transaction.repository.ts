@@ -1,5 +1,5 @@
-import { TransactionType } from "../../../generated/prisma/client";
 import { prisma } from "../../../database/prisma";
+import { TransactionType } from "../../../generated/prisma/client";
 
 interface CreateTransactionData {
   userId: string;
@@ -17,14 +17,19 @@ export function findUserById(userId: string) {
   });
 }
 
-export function createTransaction(data: CreateTransactionData) {
+export function createTransaction(
+  data: CreateTransactionData,
+) {
   return prisma.transaction.create({
     data,
   });
 }
 
-export function listTransactions() {
+export function listTransactions(userId: string) {
   return prisma.transaction.findMany({
+    where: {
+      userId,
+    },
     orderBy: {
       createdAt: "desc",
     },
