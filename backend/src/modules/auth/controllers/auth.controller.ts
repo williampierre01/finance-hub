@@ -5,21 +5,23 @@ import {
   login as loginService,
 } from "../services/auth.service";
 
-const AUTH_COOKIE_NAME = "financehub_token";
-const ONE_DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
-
 export async function login(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<Response> {
-  const result = await loginService(request.body);
+  const { email, password } = request.body;
 
-  response.cookie(AUTH_COOKIE_NAME, result.accessToken, {
+  const result = await loginService({
+    email,
+    password,
+  });
+
+  response.cookie("financehub_token", result.accessToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: ONE_DAY_IN_MILLISECONDS,
+    maxAge: 1000 * 60 * 60 * 24,
   });
 
   return response.status(200).json({
@@ -29,11 +31,25 @@ export async function login(
 
 export async function me(
   request: Request,
-  response: Response,
+  response: Response
 ): Promise<Response> {
   const userId = response.locals.userId as string;
 
   const user = await getAuthenticatedUser(userId);
 
   return response.status(200).json(user);
+}
+
+export async function logout(
+  request: Request,
+  response: Response
+): Promise<Response> {
+  response.clearCookie("financehub_token", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+
+  return response.status(204).send();
 }

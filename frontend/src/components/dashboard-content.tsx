@@ -36,7 +36,9 @@ export function DashboardContent() {
       setIsLoading(true);
       setErrorMessage("");
 
-      const response = await fetch(`${apiUrl}/transactions`);
+      const response = await fetch(`${apiUrl}/transactions`, {
+  credentials: "include",
+});
 
       if (!response.ok) {
         throw new Error("Não foi possível carregar as transações.");
