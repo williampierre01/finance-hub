@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { useAuthenticatedUser } from "@/components/auth-guard";
 import { LogoutButton } from "@/components/logout-button";
 
 const navigationItems = [
@@ -22,9 +23,10 @@ const navigationItems = [
 
 export function DashboardNavigation() {
   const pathname = usePathname();
+  const user = useAuthenticatedUser();
 
   return (
-    <nav className="mb-10 flex flex-wrap items-start gap-3">
+    <nav className="mb-10 flex flex-wrap items-center gap-3">
       {navigationItems.map((item) => {
         const isActive = pathname === item.href;
 
@@ -43,7 +45,19 @@ export function DashboardNavigation() {
         );
       })}
 
-      <LogoutButton />
+      <div className="ml-auto flex items-center gap-4">
+        <div className="text-right">
+          <strong className="block text-sm text-slate-100">
+            {user.name}
+          </strong>
+
+          <span className="block text-xs text-slate-400">
+            {user.email}
+          </span>
+        </div>
+
+        <LogoutButton />
+      </div>
     </nav>
   );
 }
