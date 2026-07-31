@@ -1,8 +1,22 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
+
+export interface AuthenticatedUser {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -13,11 +27,29 @@ type AuthenticationStatus =
   | "authenticated"
   | "error";
 
+const AuthenticatedUserContext =
+  createContext<AuthenticatedUser | null>(null);
+
+export function useAuthenticatedUser() {
+  const user = useContext(AuthenticatedUserContext);
+
+  if (!user) {
+    throw new Error(
+      "useAuthenticatedUser deve ser utilizado dentro do AuthGuard."
+    );
+  }
+
+  return user;
+}
+
 export function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
 
   const [status, setStatus] =
     useState<AuthenticationStatus>("loading");
+
+  const [user, setUser] =
+    useState<AuthenticatedUser | null>(null);
 
   const verifyAuthentication = useCallback(async () => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -35,6 +67,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
       });
 
       if (response.status === 401) {
+        setUser(null);
         router.replace("/login");
         return;
       }
@@ -43,8 +76,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
         throw new Error();
       }
 
+      const authenticatedUser =
+        (await response.json()) as AuthenticatedUser;
+
+      setUser(authenticatedUser);
       setStatus("authenticated");
     } catch {
+      setUser(null);
       setStatus("error");
     }
   }, [router]);
@@ -87,5 +125,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  return <>{children}</>;
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <AuthenticatedUserContext.Provider value={user}>
+      {children}
+    </AuthenticatedUserContext.Provider>
+  );
 }

@@ -42,7 +42,7 @@ export function LogoutButton() {
   }
 
   return (
-    <div className="ml-auto">
+    <div>
       <button
         type="button"
         onClick={handleLogout}
@@ -53,7 +53,7 @@ export function LogoutButton() {
       </button>
 
       {errorMessage && (
-        <p className="mt-2 text-right text-xs text-red-400">
+        <p className="mt-2 max-w-48 text-right text-xs text-red-400">
           {errorMessage}
         </p>
       )}
