@@ -19,6 +19,10 @@ const navigationItems = [
     href: "/despesas",
     label: "Despesas",
   },
+  {
+    href: "/perfil",
+    label: "Perfil",
+  },
 ];
 
 export function DashboardNavigation() {
