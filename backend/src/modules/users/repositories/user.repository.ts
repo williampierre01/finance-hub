@@ -1,18 +1,14 @@
 import { prisma } from "../../../database/prisma";
 
-export function findUserById(userId: string) {
-  return prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-    select: publicUserFields,
-  });
-}
-
 interface CreateUserData {
   name: string;
   email: string;
   passwordHash: string;
+}
+
+interface UpdateUserData {
+  name?: string;
+  email?: string;
 }
 
 const publicUserFields = {
@@ -22,6 +18,15 @@ const publicUserFields = {
   createdAt: true,
   updatedAt: true,
 };
+
+export function findUserById(userId: string) {
+  return prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: publicUserFields,
+  });
+}
 
 export function findUserByEmail(email: string) {
   return prisma.user.findUnique({
@@ -33,6 +38,19 @@ export function findUserByEmail(email: string) {
 
 export function createUser(data: CreateUserData) {
   return prisma.user.create({
+    data,
+    select: publicUserFields,
+  });
+}
+
+export function updateUser(
+  userId: string,
+  data: UpdateUserData
+) {
+  return prisma.user.update({
+    where: {
+      id: userId,
+    },
     data,
     select: publicUserFields,
   });

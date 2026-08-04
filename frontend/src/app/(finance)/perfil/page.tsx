@@ -2,6 +2,7 @@
 
 import { useAuthenticatedUser } from "@/components/auth-guard";
 import { PageHeader } from "@/components/page-header";
+import { ProfileUpdateForm } from "@/components/profile-update-form";
 
 export default function ProfilePage() {
   const user = useAuthenticatedUser();
@@ -19,7 +20,7 @@ export default function ProfilePage() {
       <PageHeader
         eyebrow="Minha conta"
         title="Perfil"
-        description="Consulte os dados da sua conta no FinanceHub."
+        description="Consulte e atualize os dados da sua conta no FinanceHub."
       />
 
       <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-6">
@@ -59,6 +60,8 @@ export default function ProfilePage() {
           </div>
         </dl>
       </section>
+
+      <ProfileUpdateForm />
     </>
   );
 }
