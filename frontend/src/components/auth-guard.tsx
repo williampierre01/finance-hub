@@ -22,24 +22,37 @@ interface AuthGuardProps {
   children: ReactNode;
 }
 
+interface AuthenticatedUserContextValue {
+  user: AuthenticatedUser;
+  refreshUser: () => Promise<void>;
+}
+
 type AuthenticationStatus =
   | "loading"
   | "authenticated"
   | "error";
 
 const AuthenticatedUserContext =
-  createContext<AuthenticatedUser | null>(null);
+  createContext<AuthenticatedUserContextValue | null>(null);
 
-export function useAuthenticatedUser() {
-  const user = useContext(AuthenticatedUserContext);
+function useAuthenticationContext() {
+  const context = useContext(AuthenticatedUserContext);
 
-  if (!user) {
+  if (!context) {
     throw new Error(
-      "useAuthenticatedUser deve ser utilizado dentro do AuthGuard."
+      "O contexto de autenticação deve ser utilizado dentro do AuthGuard."
     );
   }
 
-  return user;
+  return context;
+}
+
+export function useAuthenticatedUser() {
+  return useAuthenticationContext().user;
+}
+
+export function useRefreshAuthenticatedUser() {
+  return useAuthenticationContext().refreshUser;
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
@@ -60,7 +73,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
     }
 
     try {
-      setStatus("loading");
+      setStatus((currentStatus) =>
+  currentStatus === "authenticated"
+    ? "authenticated"
+    : "loading"
+);
 
       const response = await fetch(`${apiUrl}/auth/me`, {
         credentials: "include",
@@ -130,7 +147,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
 
   return (
-    <AuthenticatedUserContext.Provider value={user}>
+    <AuthenticatedUserContext.Provider
+      value={{
+        user,
+        refreshUser: verifyAuthentication,
+      }}
+    >
       {children}
     </AuthenticatedUserContext.Provider>
   );
