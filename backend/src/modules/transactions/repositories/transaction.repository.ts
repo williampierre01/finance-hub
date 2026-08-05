@@ -9,6 +9,12 @@ interface CreateTransactionData {
   category: string;
 }
 
+interface UpdateTransactionData {
+  title?: string;
+  amount?: number;
+  category?: string;
+}
+
 export function findUserById(userId: string) {
   return prisma.user.findUnique({
     where: {
@@ -45,5 +51,17 @@ export function findTransactionById(
       id: transactionId,
       userId,
     },
+  });
+}
+
+export function updateTransaction(
+  transactionId: string,
+  data: UpdateTransactionData,
+) {
+  return prisma.transaction.update({
+    where: {
+      id: transactionId,
+    },
+    data,
   });
 }

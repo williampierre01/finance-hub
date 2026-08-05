@@ -4,6 +4,7 @@ import {
   createTransaction as createTransactionService,
   getTransactionById as getTransactionByIdService,
   listTransactions as listTransactionsService,
+  updateTransaction as updateTransactionService,
 } from "../services/transaction.service";
 
 export async function createTransaction(
@@ -47,4 +48,23 @@ export async function getTransactionById(
     );
 
   return response.status(200).json(transaction);
+}
+
+export async function updateTransaction(
+  request: Request,
+  response: Response,
+): Promise<Response> {
+  const userId = response.locals.userId as string;
+  const id = request.params.id as string;
+
+  const updatedTransaction =
+    await updateTransactionService(
+      id,
+      userId,
+      request.body,
+    );
+
+  return response
+    .status(200)
+    .json(updatedTransaction);
 }
