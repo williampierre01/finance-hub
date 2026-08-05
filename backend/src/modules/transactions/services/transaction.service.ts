@@ -3,6 +3,7 @@ import { TransactionType } from "../../../generated/prisma/client";
 
 import {
   createTransaction as createTransactionRepository,
+  findTransactionById as findTransactionByIdRepository,
   findUserById,
   listTransactions as listTransactionsRepository,
 } from "../repositories/transaction.repository";
@@ -52,10 +53,15 @@ export async function createTransaction(
 
   const normalizedUserId = userId.trim();
 
-  const userExists = await findUserById(normalizedUserId);
+  const userExists = await findUserById(
+    normalizedUserId,
+  );
 
   if (!userExists) {
-    throw new AppError("Usuário não encontrado", 404);
+    throw new AppError(
+      "Usuário não encontrado",
+      404,
+    );
   }
 
   return createTransactionRepository({
@@ -70,6 +76,34 @@ export async function createTransaction(
   });
 }
 
-export async function listTransactions(userId: string) {
+export async function listTransactions(
+  userId: string,
+) {
   return listTransactionsRepository(userId);
+}
+
+export async function getTransactionById(
+  transactionId: string,
+  userId: string,
+) {
+  if (!transactionId || !transactionId.trim()) {
+    throw new AppError(
+      "O ID da transação é obrigatório",
+    );
+  }
+
+  const transaction =
+    await findTransactionByIdRepository(
+      transactionId.trim(),
+      userId,
+    );
+
+  if (!transaction) {
+    throw new AppError(
+      "Transação não encontrada",
+      404,
+    );
+  }
+
+  return transaction;
 }

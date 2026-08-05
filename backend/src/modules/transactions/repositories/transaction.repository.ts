@@ -35,3 +35,15 @@ export function listTransactions(userId: string) {
     },
   });
 }
+
+export function findTransactionById(
+  transactionId: string,
+  userId: string,
+) {
+  return prisma.transaction.findFirst({
+    where: {
+      id: transactionId,
+      userId,
+    },
+  });
+}
