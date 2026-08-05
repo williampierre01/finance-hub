@@ -1,7 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
+import { TransactionEditForm } from "@/components/transaction-edit-form";
 import { TransactionListLoading } from "@/components/transaction-list-loading";
 
 interface Transaction {
@@ -16,21 +21,34 @@ interface Transaction {
 interface FilteredTransactionListProps {
   type: "INCOME" | "EXPENSE";
   emptyMessage: string;
+  allowEditing?: boolean;
 }
 
 export function FilteredTransactionList({
   type,
   emptyMessage,
+  allowEditing = false,
 }: FilteredTransactionListProps) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [transactions, setTransactions] =
+    useState<Transaction[]>([]);
+
+  const [editingTransactionId, setEditingTransactionId] =
+    useState<string | null>(null);
+
+  const [isLoading, setIsLoading] =
+    useState(true);
+
+  const [errorMessage, setErrorMessage] =
+    useState("");
 
   const loadTransactions = useCallback(async () => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL;
 
     if (!apiUrl) {
-      setErrorMessage("A URL da API não foi configurada.");
+      setErrorMessage(
+        "A URL da API não foi configurada.",
+      );
       setIsLoading(false);
       return;
     }
@@ -39,18 +57,25 @@ export function FilteredTransactionList({
       setIsLoading(true);
       setErrorMessage("");
 
-      const response = await fetch(`${apiUrl}/transactions`, {
-  credentials: "include",
-});
+      const response = await fetch(
+        `${apiUrl}/transactions`,
+        {
+          credentials: "include",
+        },
+      );
 
       if (!response.ok) {
-        throw new Error("Não foi possível carregar as transações.");
+        throw new Error(
+          "Não foi possível carregar as transações.",
+        );
       }
 
-      const data = (await response.json()) as Transaction[];
+      const data =
+        (await response.json()) as Transaction[];
 
       const filteredTransactions = data.filter(
-        (transaction) => transaction.type === type,
+        (transaction) =>
+          transaction.type === type,
       );
 
       setTransactions(filteredTransactions);
@@ -67,6 +92,11 @@ export function FilteredTransactionList({
     loadTransactions();
   }, [loadTransactions]);
 
+  async function handleTransactionUpdated() {
+    setEditingTransactionId(null);
+    await loadTransactions();
+  }
+
   if (isLoading) {
     return <TransactionListLoading />;
   }
@@ -74,7 +104,10 @@ export function FilteredTransactionList({
   if (errorMessage) {
     return (
       <section className="mt-10 rounded-2xl border border-red-900 bg-red-950/30 p-4 sm:p-6">
-        <p role="alert" className="text-sm text-red-200">
+        <p
+          role="alert"
+          className="text-sm text-red-200"
+        >
           {errorMessage}
         </p>
 
@@ -92,7 +125,9 @@ export function FilteredTransactionList({
   if (transactions.length === 0) {
     return (
       <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
-        <p className="text-sm text-slate-400">{emptyMessage}</p>
+        <p className="text-sm text-slate-400">
+          {emptyMessage}
+        </p>
       </section>
     );
   }
@@ -108,42 +143,77 @@ export function FilteredTransactionList({
             currency: "BRL",
           });
 
-          const isIncome = transaction.type === "INCOME";
+          const isIncome =
+            transaction.type === "INCOME";
+
+          const isEditing =
+            editingTransactionId === transaction.id;
 
           return (
-            <article
-              key={transaction.id}
-              className="flex flex-col gap-4 rounded-xl border border-slate-800 bg-slate-950 p-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div>
-                <strong className="block text-slate-100">
-                  {transaction.title}
-                </strong>
+            <div key={transaction.id}>
+              <article className="flex flex-col gap-4 rounded-xl border border-slate-800 bg-slate-950 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <strong className="block text-slate-100">
+                    {transaction.title}
+                  </strong>
 
-                <span className="mt-1 block text-sm text-slate-400">
-                  {transaction.category}
-                </span>
-              </div>
+                  <span className="mt-1 block text-sm text-slate-400">
+                    {transaction.category}
+                  </span>
+                </div>
 
-              <div className="sm:text-right">
-                <strong
-                  className={
-                    isIncome
-                      ? "text-emerald-400"
-                      : "text-red-400"
-                  }
-                >
-                  {isIncome ? "+ " : "- "}
-                  {formattedAmount}
-                </strong>
+                <div className="flex flex-col gap-3 sm:items-end">
+                  <div className="sm:text-right">
+                    <strong
+                      className={
+                        isIncome
+                          ? "text-emerald-400"
+                          : "text-red-400"
+                      }
+                    >
+                      {isIncome ? "+ " : "- "}
+                      {formattedAmount}
+                    </strong>
 
-                <span className="mt-1 block text-xs text-slate-500">
-                  {new Date(transaction.createdAt).toLocaleDateString(
-                    "pt-BR",
+                    <span className="mt-1 block text-xs text-slate-500">
+                      {new Date(
+                        transaction.createdAt,
+                      ).toLocaleDateString("pt-BR")}
+                    </span>
+                  </div>
+
+                  {allowEditing && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditingTransactionId(
+                          isEditing
+                            ? null
+                            : transaction.id,
+                        )
+                      }
+                      className="rounded-lg border border-emerald-700 px-3 py-2 text-sm font-semibold text-emerald-400 transition hover:bg-emerald-950"
+                    >
+                      {isEditing
+                        ? "Fechar edição"
+                        : "Editar"}
+                    </button>
                   )}
-                </span>
-              </div>
-            </article>
+                </div>
+              </article>
+
+              {allowEditing && isEditing && (
+                <TransactionEditForm
+                  transaction={transaction}
+                  onUpdated={
+                    handleTransactionUpdated
+                  }
+                  onCancel={() =>
+                    setEditingTransactionId(null)
+                  }
+                />
+              )}
+            </div>
           );
         })}
       </div>

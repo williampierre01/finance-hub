@@ -6,6 +6,7 @@ import {
   findTransactionById as findTransactionByIdRepository,
   findUserById,
   listTransactions as listTransactionsRepository,
+  updateTransaction as updateTransactionRepository,
 } from "../repositories/transaction.repository";
 
 interface CreateTransactionData {
@@ -14,6 +15,12 @@ interface CreateTransactionData {
   amount: number;
   type: string;
   category: string;
+}
+
+interface UpdateTransactionData {
+  title?: string;
+  amount?: number;
+  category?: string;
 }
 
 export async function createTransaction(
@@ -106,4 +113,74 @@ export async function getTransactionById(
   }
 
   return transaction;
+}
+
+export async function updateTransaction(
+  transactionId: string,
+  userId: string,
+  {
+    title,
+    amount,
+    category,
+  }: UpdateTransactionData,
+) {
+  const transaction =
+    await findTransactionByIdRepository(
+      transactionId,
+      userId,
+    );
+
+  if (!transaction) {
+    throw new AppError(
+      "Transação não encontrada",
+      404,
+    );
+  }
+
+  if (
+    title === undefined &&
+    amount === undefined &&
+    category === undefined
+  ) {
+    throw new AppError(
+      "Informe pelo menos um campo para atualizar",
+    );
+  }
+
+  const updatedData: UpdateTransactionData = {};
+
+  if (title !== undefined) {
+    if (!title || !title.trim()) {
+      throw new AppError(
+        "O título é obrigatório",
+      );
+    }
+
+    updatedData.title = title.trim();
+  }
+
+  if (amount !== undefined) {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new AppError(
+        "O valor deve ser maior que zero",
+      );
+    }
+
+    updatedData.amount = amount;
+  }
+
+  if (category !== undefined) {
+    if (!category || !category.trim()) {
+      throw new AppError(
+        "A categoria é obrigatória",
+      );
+    }
+
+    updatedData.category = category.trim();
+  }
+
+  return updateTransactionRepository(
+    transactionId,
+    updatedData,
+  );
 }
