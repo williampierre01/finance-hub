@@ -348,43 +348,11 @@ export async function deleteTransaction(
   );
 }
 
-export async function getTransactionSummary(
-  userId: string,
-  month?: string,
+function calculateSummaryTotals(
+  groupedTransactions: Awaited<
+    ReturnType<typeof getTransactionSummaryRepository>
+  >,
 ) {
-  let startDate: Date | undefined;
-  let endDate: Date | undefined;
-
-  if (month) {
-    const validMonthFormat =
-      /^\d{4}-(0[1-9]|1[0-2])$/.test(month);
-
-    if (!validMonthFormat) {
-      throw new AppError(
-        "O mês deve estar no formato AAAA-MM",
-      );
-    }
-
-    const [year, monthNumber] = month
-      .split("-")
-      .map(Number);
-
-    startDate = new Date(
-      Date.UTC(year, monthNumber - 1, 1),
-    );
-
-    endDate = new Date(
-      Date.UTC(year, monthNumber, 1),
-    );
-  }
-
-  const groupedTransactions =
-    await getTransactionSummaryRepository(
-      userId,
-      startDate,
-      endDate,
-    );
-
   let income = 0;
   let expense = 0;
 
@@ -404,6 +372,123 @@ export async function getTransactionSummary(
     income,
     expense,
     balance: income - expense,
-    month: month ?? null,
+  };
+}
+
+function calculatePercentageVariation(
+  currentValue: number,
+  previousValue: number,
+) {
+  if (previousValue === 0) {
+    return currentValue === 0 ? 0 : 100;
+  }
+
+  const variation =
+    ((currentValue - previousValue) /
+      Math.abs(previousValue)) *
+    100;
+
+  return Number(variation.toFixed(2));
+}
+
+export async function getTransactionSummary(
+  userId: string,
+  month?: string,
+) {
+  if (!month) {
+    const groupedTransactions =
+      await getTransactionSummaryRepository(userId);
+
+    const totals = calculateSummaryTotals(
+      groupedTransactions,
+    );
+
+    return {
+      ...totals,
+      month: null,
+      previousMonth: null,
+      variation: null,
+    };
+  }
+
+  const validMonthFormat =
+    /^\d{4}-(0[1-9]|1[0-2])$/.test(month);
+
+  if (!validMonthFormat) {
+    throw new AppError(
+      "O mês deve estar no formato AAAA-MM",
+    );
+  }
+
+  const [year, monthNumber] = month
+    .split("-")
+    .map(Number);
+
+  const currentStartDate = new Date(
+    Date.UTC(year, monthNumber - 1, 1),
+  );
+
+  const currentEndDate = new Date(
+    Date.UTC(year, monthNumber, 1),
+  );
+
+  const previousStartDate = new Date(
+    Date.UTC(year, monthNumber - 2, 1),
+  );
+
+  const previousEndDate = currentStartDate;
+
+  const previousMonthValue = [
+    previousStartDate.getUTCFullYear(),
+    String(
+      previousStartDate.getUTCMonth() + 1,
+    ).padStart(2, "0"),
+  ].join("-");
+
+  const [
+    currentGroupedTransactions,
+    previousGroupedTransactions,
+  ] = await Promise.all([
+    getTransactionSummaryRepository(
+      userId,
+      currentStartDate,
+      currentEndDate,
+    ),
+    getTransactionSummaryRepository(
+      userId,
+      previousStartDate,
+      previousEndDate,
+    ),
+  ]);
+
+  const currentTotals = calculateSummaryTotals(
+    currentGroupedTransactions,
+  );
+
+  const previousTotals = calculateSummaryTotals(
+    previousGroupedTransactions,
+  );
+
+  return {
+    ...currentTotals,
+    month,
+    previousMonth: {
+      ...previousTotals,
+      month: previousMonthValue,
+    },
+    variation: {
+      income: calculatePercentageVariation(
+        currentTotals.income,
+        previousTotals.income,
+      ),
+      expense: calculatePercentageVariation(
+        currentTotals.expense,
+        previousTotals.expense,
+      ),
+      balance: calculatePercentageVariation(
+        currentTotals.balance,
+        previousTotals.balance,
+      ),
+    },
   };
 }
