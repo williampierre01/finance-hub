@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuthenticatedUser } from "@/components/auth-guard";
+import { ChangePasswordForm } from "@/components/change-password-form";
 import { PageHeader } from "@/components/page-header";
 import { ProfileUpdateForm } from "@/components/profile-update-form";
 
@@ -62,6 +63,8 @@ export default function ProfilePage() {
       </section>
 
       <ProfileUpdateForm />
+
+      <ChangePasswordForm />
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 
 import {
+  changeUserPassword as changeUserPasswordService,
   createUser as createUserService,
   listUsers as listUsersService,
   updateUserProfile as updateUserProfileService,
@@ -27,6 +28,27 @@ export async function updateUserProfile(
   );
 
   return response.status(200).json(updatedUser);
+}
+
+export async function changeUserPassword(
+  request: Request,
+  response: Response
+): Promise<Response> {
+  const userId = response.locals.userId as string;
+
+  await changeUserPasswordService(
+    userId,
+    request.body
+  );
+
+  response.clearCookie("financehub_token", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+
+  return response.status(204).send();
 }
 
 export async function listUsers(
