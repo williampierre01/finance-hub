@@ -155,3 +155,15 @@ export function deleteTransaction(transactionId: string) {
     },
   });
 }
+
+export function getTransactionSummary(userId: string) {
+  return prisma.transaction.groupBy({
+    by: ["type"],
+    where: {
+      userId,
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+}

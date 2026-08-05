@@ -5,6 +5,7 @@ import {
   createTransaction,
   deleteTransaction,
   getTransactionById,
+  getTransactionSummary,
   listPaginatedTransactions,
   listTransactions,
   updateTransaction,
@@ -16,12 +17,30 @@ transactionRoutes.use(ensureAuthenticated);
 
 transactionRoutes.post("/", createTransaction);
 transactionRoutes.get("/", listTransactions);
+
 transactionRoutes.get(
   "/paginated",
   listPaginatedTransactions,
 );
-transactionRoutes.get("/:id", getTransactionById);
-transactionRoutes.patch("/:id", updateTransaction);
-transactionRoutes.delete("/:id", deleteTransaction);
+
+transactionRoutes.get(
+  "/summary",
+  getTransactionSummary,
+);
+
+transactionRoutes.get(
+  "/:id",
+  getTransactionById,
+);
+
+transactionRoutes.patch(
+  "/:id",
+  updateTransaction,
+);
+
+transactionRoutes.delete(
+  "/:id",
+  deleteTransaction,
+);
 
 export default transactionRoutes;

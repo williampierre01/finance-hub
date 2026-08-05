@@ -6,6 +6,7 @@ import {
   deleteTransaction as deleteTransactionRepository,
   findTransactionById as findTransactionByIdRepository,
   findUserById,
+  getTransactionSummary as getTransactionSummaryRepository,
   listPaginatedTransactions as listPaginatedTransactionsRepository,
   listTransactions as listTransactionsRepository,
   updateTransaction as updateTransactionRepository,
@@ -326,7 +327,8 @@ export async function deleteTransaction(
     );
   }
 
-  const normalizedTransactionId = transactionId.trim();
+  const normalizedTransactionId =
+    transactionId.trim();
 
   const transaction =
     await findTransactionByIdRepository(
@@ -344,4 +346,32 @@ export async function deleteTransaction(
   await deleteTransactionRepository(
     normalizedTransactionId,
   );
+}
+
+export async function getTransactionSummary(
+  userId: string,
+) {
+  const groupedTransactions =
+    await getTransactionSummaryRepository(userId);
+
+  let income = 0;
+  let expense = 0;
+
+  for (const group of groupedTransactions) {
+    const total = Number(group._sum.amount ?? 0);
+
+    if (group.type === TransactionType.INCOME) {
+      income = total;
+    }
+
+    if (group.type === TransactionType.EXPENSE) {
+      expense = total;
+    }
+  }
+
+  return {
+    income,
+    expense,
+    balance: income - expense,
+  };
 }
