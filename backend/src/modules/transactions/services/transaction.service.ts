@@ -6,6 +6,7 @@ import {
   deleteTransaction as deleteTransactionRepository,
   findTransactionById as findTransactionByIdRepository,
   findUserById,
+  listPaginatedTransactions as listPaginatedTransactionsRepository,
   listTransactions as listTransactionsRepository,
   updateTransaction as updateTransactionRepository,
 } from "../repositories/transaction.repository";
@@ -22,6 +23,17 @@ interface UpdateTransactionData {
   title?: string;
   amount?: number;
   category?: string;
+}
+
+interface ListPaginatedTransactionsFilters {
+  userId: string;
+  type?: string;
+  search?: string;
+  category?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: string;
+  limit?: string;
 }
 
 export async function createTransaction(
@@ -88,6 +100,124 @@ export async function listTransactions(
   userId: string,
 ) {
   return listTransactionsRepository(userId);
+}
+
+export async function listPaginatedTransactions({
+  userId,
+  type,
+  search,
+  category,
+  startDate,
+  endDate,
+  page = "1",
+  limit = "5",
+}: ListPaginatedTransactionsFilters) {
+  const parsedPage = Number(page);
+  const parsedLimit = Number(limit);
+
+  if (
+    !Number.isInteger(parsedPage) ||
+    parsedPage < 1
+  ) {
+    throw new AppError(
+      "A página deve ser um número inteiro maior que zero",
+    );
+  }
+
+  if (
+    !Number.isInteger(parsedLimit) ||
+    parsedLimit < 1 ||
+    parsedLimit > 50
+  ) {
+    throw new AppError(
+      "O limite deve ser um número inteiro entre 1 e 50",
+    );
+  }
+
+  if (
+    type &&
+    type !== "income" &&
+    type !== "expense"
+  ) {
+    throw new AppError(
+      "O tipo deve ser income ou expense",
+    );
+  }
+
+  let parsedStartDate: Date | undefined;
+  let parsedEndDate: Date | undefined;
+
+  if (startDate) {
+    parsedStartDate = new Date(
+      `${startDate}T00:00:00.000Z`,
+    );
+
+    if (Number.isNaN(parsedStartDate.getTime())) {
+      throw new AppError(
+        "A data inicial é inválida",
+      );
+    }
+  }
+
+  if (endDate) {
+    parsedEndDate = new Date(
+      `${endDate}T23:59:59.999Z`,
+    );
+
+    if (Number.isNaN(parsedEndDate.getTime())) {
+      throw new AppError(
+        "A data final é inválida",
+      );
+    }
+  }
+
+  if (
+    parsedStartDate &&
+    parsedEndDate &&
+    parsedStartDate > parsedEndDate
+  ) {
+    throw new AppError(
+      "A data inicial não pode ser posterior à data final",
+    );
+  }
+
+  const skip = (parsedPage - 1) * parsedLimit;
+
+  let transactionType:
+    | TransactionType
+    | undefined;
+
+  if (type === "income") {
+    transactionType = TransactionType.INCOME;
+  }
+
+  if (type === "expense") {
+    transactionType = TransactionType.EXPENSE;
+  }
+
+  const { transactions, total } =
+    await listPaginatedTransactionsRepository({
+      userId,
+      type: transactionType,
+      search: search?.trim() || undefined,
+      category: category?.trim() || undefined,
+      startDate: parsedStartDate,
+      endDate: parsedEndDate,
+      skip,
+      take: parsedLimit,
+    });
+
+  return {
+    data: transactions,
+    pagination: {
+      page: parsedPage,
+      limit: parsedLimit,
+      total,
+      totalPages: Math.ceil(
+        total / parsedLimit,
+      ),
+    },
+  };
 }
 
 export async function getTransactionById(
