@@ -2,45 +2,50 @@
 
 import { useState } from "react";
 
+type TransactionType = "INCOME" | "EXPENSE";
+
 interface TransactionDeleteButtonProps {
   transactionId: string;
   transactionTitle: string;
+  transactionType: TransactionType;
   onDeleted: () => void | Promise<void>;
 }
 
 interface ApiErrorResponse {
   message?: string;
+  error?: string;
 }
 
 export function TransactionDeleteButton({
   transactionId,
   transactionTitle,
+  transactionType,
   onDeleted,
 }: TransactionDeleteButtonProps) {
-  const [isDeleting, setIsDeleting] =
-    useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const [errorMessage, setErrorMessage] =
-    useState("");
+  const transactionLabel =
+    transactionType === "INCOME" ? "receita" : "despesa";
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Deseja realmente excluir a receita "${transactionTitle}"?`,
+      `Deseja realmente excluir a ${transactionLabel} "${transactionTitle}"?`,
     );
 
     if (!confirmed) {
       return;
     }
 
-    const apiUrl =
-      process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     if (!apiUrl) {
-      setErrorMessage(
-        "A URL da API não foi configurada.",
-      );
+      setErrorMessage("A URL da API não foi configurada.");
       return;
     }
+
+    const defaultErrorMessage =
+      `Não foi possível excluir a ${transactionLabel}.`;
 
     try {
       setIsDeleting(true);
@@ -61,7 +66,8 @@ export function TransactionDeleteButton({
 
         throw new Error(
           errorData?.message ??
-            "Não foi possível excluir a receita.",
+            errorData?.error ??
+            defaultErrorMessage,
         );
       }
 
@@ -70,7 +76,7 @@ export function TransactionDeleteButton({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Não foi possível excluir a receita.",
+          : defaultErrorMessage,
       );
     } finally {
       setIsDeleting(false);
@@ -78,21 +84,18 @@ export function TransactionDeleteButton({
   }
 
   return (
-    <div className="sm:text-right">
+    <div>
       <button
         type="button"
         onClick={handleDelete}
         disabled={isDeleting}
-        className="rounded-lg border border-red-800 px-3 py-2 text-sm font-semibold text-red-400 transition hover:bg-red-950 disabled:cursor-not-allowed disabled:opacity-60"
+        className="rounded-lg border border-red-800 px-3 py-2 text-sm font-semibold text-red-400 transition hover:border-red-500 hover:bg-red-950/40 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isDeleting ? "Excluindo..." : "Excluir"}
       </button>
 
       {errorMessage && (
-        <p
-          role="alert"
-          className="mt-2 max-w-64 text-xs text-red-400"
-        >
+        <p className="mt-2 max-w-64 text-sm text-red-400">
           {errorMessage}
         </p>
       )}

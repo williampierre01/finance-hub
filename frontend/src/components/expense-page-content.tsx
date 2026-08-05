@@ -25,6 +25,8 @@ export function ExpensePageContent() {
         key={refreshKey}
         type="EXPENSE"
         emptyMessage="Nenhuma despesa cadastrada."
+        allowEditing
+        allowDeleting
       />
     </>
   );
