@@ -340,15 +340,10 @@ export function FilteredTransactionList({
 
                         {allowDeleting && (
                           <TransactionDeleteButton
-                            transactionId={
-                              transaction.id
-                            }
-                            transactionTitle={
-                              transaction.title
-                            }
-                            onDeleted={
-                              handleTransactionDeleted
-                            }
+                            transactionId={transaction.id}
+                            transactionTitle={transaction.title}
+                            transactionType={transaction.type}
+                            onDeleted={loadTransactions}
                           />
                         )}
                       </div>
