@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 
 import {
   createTransaction as createTransactionService,
+  deleteTransaction as deleteTransactionService,
   getTransactionById as getTransactionByIdService,
   listTransactions as listTransactionsService,
   updateTransaction as updateTransactionService,
@@ -67,4 +68,19 @@ export async function updateTransaction(
   return response
     .status(200)
     .json(updatedTransaction);
+}
+
+export async function deleteTransaction(
+  request: Request,
+  response: Response,
+): Promise<Response> {
+  const userId = response.locals.userId as string;
+  const id = request.params.id as string;
+
+  await deleteTransactionService(
+    id,
+    userId,
+  );
+
+  return response.status(204).send();
 }
