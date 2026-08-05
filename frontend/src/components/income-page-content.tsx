@@ -30,6 +30,7 @@ export function IncomePageContent() {
         emptyMessage="Nenhuma receita cadastrada."
         allowEditing
         allowDeleting
+        enableFiltersAndPagination
       />
     </>
   );

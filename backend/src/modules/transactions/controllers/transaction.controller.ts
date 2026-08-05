@@ -4,6 +4,7 @@ import {
   createTransaction as createTransactionService,
   deleteTransaction as deleteTransactionService,
   getTransactionById as getTransactionByIdService,
+  listPaginatedTransactions as listPaginatedTransactionsService,
   listTransactions as listTransactionsService,
   updateTransaction as updateTransactionService,
 } from "../services/transaction.service";
@@ -33,6 +34,37 @@ export async function listTransactions(
     await listTransactionsService(userId);
 
   return response.status(200).json(transactions);
+}
+
+export async function listPaginatedTransactions(
+  request: Request,
+  response: Response,
+): Promise<Response> {
+  const userId = response.locals.userId as string;
+
+  const {
+    type,
+    search,
+    category,
+    startDate,
+    endDate,
+    page,
+    limit,
+  } = request.query;
+
+  const result =
+    await listPaginatedTransactionsService({
+      userId,
+      type: type as string | undefined,
+      search: search as string | undefined,
+      category: category as string | undefined,
+      startDate: startDate as string | undefined,
+      endDate: endDate as string | undefined,
+      page: page as string | undefined,
+      limit: limit as string | undefined,
+    });
+
+  return response.status(200).json(result);
 }
 
 export async function getTransactionById(
