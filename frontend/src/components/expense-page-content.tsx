@@ -24,9 +24,10 @@ export function ExpensePageContent() {
       <FilteredTransactionList
         key={refreshKey}
         type="EXPENSE"
-        emptyMessage="Nenhuma despesa cadastrada."
+        emptyMessage="Nenhuma despesa encontrada."
         allowEditing
         allowDeleting
+        enableFiltersAndPagination
       />
     </>
   );
