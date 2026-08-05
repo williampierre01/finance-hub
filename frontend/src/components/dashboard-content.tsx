@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 
+import { MonthlyComparison } from "@/components/monthly-comparison";
 import { SummaryCard } from "@/components/summary-card";
 import { TransactionCounter } from "@/components/transaction-counter";
 import { TransactionForm } from "@/components/transaction-form";
@@ -22,11 +23,26 @@ export interface Transaction {
   updatedAt: string;
 }
 
+interface SummaryValues {
+  income: number;
+  expense: number;
+  balance: number;
+  month: string;
+}
+
+interface VariationValues {
+  income: number;
+  expense: number;
+  balance: number;
+}
+
 interface FinancialSummary {
   income: number;
   expense: number;
   balance: number;
   month: string | null;
+  previousMonth: SummaryValues | null;
+  variation: VariationValues | null;
 }
 
 const initialSummary: FinancialSummary = {
@@ -34,6 +50,8 @@ const initialSummary: FinancialSummary = {
   expense: 0,
   balance: 0,
   month: null,
+  previousMonth: null,
+  variation: null,
 };
 
 export function DashboardContent() {
@@ -212,6 +230,21 @@ export function DashboardContent() {
           valueClassName="text-red-400"
         />
       </div>
+
+      {summary.month &&
+        summary.previousMonth &&
+        summary.variation && (
+          <MonthlyComparison
+            currentSummary={{
+              income: summary.income,
+              expense: summary.expense,
+              balance: summary.balance,
+              month: summary.month,
+            }}
+            previousMonth={summary.previousMonth}
+            variation={summary.variation}
+          />
+        )}
 
       <TransactionCounter />
 
