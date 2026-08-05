@@ -350,9 +350,40 @@ export async function deleteTransaction(
 
 export async function getTransactionSummary(
   userId: string,
+  month?: string,
 ) {
+  let startDate: Date | undefined;
+  let endDate: Date | undefined;
+
+  if (month) {
+    const validMonthFormat =
+      /^\d{4}-(0[1-9]|1[0-2])$/.test(month);
+
+    if (!validMonthFormat) {
+      throw new AppError(
+        "O mês deve estar no formato AAAA-MM",
+      );
+    }
+
+    const [year, monthNumber] = month
+      .split("-")
+      .map(Number);
+
+    startDate = new Date(
+      Date.UTC(year, monthNumber - 1, 1),
+    );
+
+    endDate = new Date(
+      Date.UTC(year, monthNumber, 1),
+    );
+  }
+
   const groupedTransactions =
-    await getTransactionSummaryRepository(userId);
+    await getTransactionSummaryRepository(
+      userId,
+      startDate,
+      endDate,
+    );
 
   let income = 0;
   let expense = 0;
@@ -373,5 +404,6 @@ export async function getTransactionSummary(
     income,
     expense,
     balance: income - expense,
+    month: month ?? null,
   };
 }

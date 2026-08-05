@@ -156,11 +156,23 @@ export function deleteTransaction(transactionId: string) {
   });
 }
 
-export function getTransactionSummary(userId: string) {
+export function getTransactionSummary(
+  userId: string,
+  startDate?: Date,
+  endDate?: Date,
+) {
   return prisma.transaction.groupBy({
     by: ["type"],
     where: {
       userId,
+      ...(startDate && endDate
+        ? {
+            createdAt: {
+              gte: startDate,
+              lt: endDate,
+            },
+          }
+        : {}),
     },
     _sum: {
       amount: true,
