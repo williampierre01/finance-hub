@@ -28,6 +28,20 @@ export function findUserById(userId: string) {
   });
 }
 
+export function findUserWithPasswordById(
+  userId: string
+) {
+  return prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      id: true,
+      passwordHash: true,
+    },
+  });
+}
+
 export function findUserByEmail(email: string) {
   return prisma.user.findUnique({
     where: {
@@ -52,6 +66,21 @@ export function updateUser(
       id: userId,
     },
     data,
+    select: publicUserFields,
+  });
+}
+
+export function updateUserPassword(
+  userId: string,
+  passwordHash: string
+) {
+  return prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      passwordHash,
+    },
     select: publicUserFields,
   });
 }

@@ -1,12 +1,17 @@
 import { AppError } from "../../../errors/app-error";
-import { hashPassword } from "../../../security/password";
+import {
+  comparePassword,
+  hashPassword,
+} from "../../../security/password";
 
 import {
   createUser as createUserRepository,
   findUserByEmail,
   findUserById,
+  findUserWithPasswordById,
   listUsers as listUsersRepository,
   updateUser as updateUserRepository,
+  updateUserPassword as updateUserPasswordRepository,
 } from "../repositories/user.repository";
 
 interface CreateUserData {
@@ -18,6 +23,12 @@ interface CreateUserData {
 interface UpdateUserData {
   name?: string;
   email?: string;
+}
+
+interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
+  passwordConfirmation: string;
 }
 
 export async function createUser({
@@ -116,6 +127,78 @@ export async function updateUserProfile(
   }
 
   return updateUserRepository(userId, updatedData);
+}
+
+export async function changeUserPassword(
+  userId: string,
+  {
+    currentPassword,
+    newPassword,
+    passwordConfirmation,
+  }: ChangePasswordData
+) {
+  if (!currentPassword) {
+    throw new AppError("Informe a senha atual");
+  }
+
+  if (!newPassword) {
+    throw new AppError("Informe a nova senha");
+  }
+
+  if (!passwordConfirmation) {
+    throw new AppError("Confirme a nova senha");
+  }
+
+  if (newPassword.length < 8) {
+    throw new AppError(
+      "A nova senha deve possuir pelo menos 8 caracteres"
+    );
+  }
+
+  if (newPassword.length > 72) {
+    throw new AppError(
+      "A nova senha deve possuir no máximo 72 caracteres"
+    );
+  }
+
+  if (newPassword !== passwordConfirmation) {
+    throw new AppError(
+      "A confirmação da senha não corresponde à nova senha"
+    );
+  }
+
+  const user = await findUserWithPasswordById(userId);
+
+  if (!user || !user.passwordHash) {
+    throw new AppError("Usuário não encontrado", 404);
+  }
+
+  const currentPasswordMatches = await comparePassword(
+    currentPassword,
+    user.passwordHash
+  );
+
+  if (!currentPasswordMatches) {
+    throw new AppError("A senha atual está incorreta", 401);
+  }
+
+  const newPasswordIsCurrent = await comparePassword(
+    newPassword,
+    user.passwordHash
+  );
+
+  if (newPasswordIsCurrent) {
+    throw new AppError(
+      "A nova senha deve ser diferente da senha atual"
+    );
+  }
+
+  const newPasswordHash = await hashPassword(newPassword);
+
+  return updateUserPasswordRepository(
+    userId,
+    newPasswordHash
+  );
 }
 
 export async function listUsers() {
