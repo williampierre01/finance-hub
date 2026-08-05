@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 
+import { TransactionDeleteButton } from "@/components/transaction-delete-button";
 import { TransactionEditForm } from "@/components/transaction-edit-form";
 import { TransactionListLoading } from "@/components/transaction-list-loading";
 
@@ -22,12 +23,14 @@ interface FilteredTransactionListProps {
   type: "INCOME" | "EXPENSE";
   emptyMessage: string;
   allowEditing?: boolean;
+  allowDeleting?: boolean;
 }
 
 export function FilteredTransactionList({
   type,
   emptyMessage,
   allowEditing = false,
+  allowDeleting = false,
 }: FilteredTransactionListProps) {
   const [transactions, setTransactions] =
     useState<Transaction[]>([]);
@@ -93,6 +96,11 @@ export function FilteredTransactionList({
   }, [loadTransactions]);
 
   async function handleTransactionUpdated() {
+    setEditingTransactionId(null);
+    await loadTransactions();
+  }
+
+  async function handleTransactionDeleted() {
     setEditingTransactionId(null);
     await loadTransactions();
   }
@@ -182,22 +190,40 @@ export function FilteredTransactionList({
                     </span>
                   </div>
 
-                  {allowEditing && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setEditingTransactionId(
-                          isEditing
-                            ? null
-                            : transaction.id,
-                        )
-                      }
-                      className="rounded-lg border border-emerald-700 px-3 py-2 text-sm font-semibold text-emerald-400 transition hover:bg-emerald-950"
-                    >
-                      {isEditing
-                        ? "Fechar edição"
-                        : "Editar"}
-                    </button>
+                  {(allowEditing || allowDeleting) && (
+                    <div className="flex flex-wrap gap-2">
+                      {allowEditing && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEditingTransactionId(
+                              isEditing
+                                ? null
+                                : transaction.id,
+                            )
+                          }
+                          className="rounded-lg border border-emerald-700 px-3 py-2 text-sm font-semibold text-emerald-400 transition hover:bg-emerald-950"
+                        >
+                          {isEditing
+                            ? "Fechar edição"
+                            : "Editar"}
+                        </button>
+                      )}
+
+                      {allowDeleting && (
+                        <TransactionDeleteButton
+                          transactionId={
+                            transaction.id
+                          }
+                          transactionTitle={
+                            transaction.title
+                          }
+                          onDeleted={
+                            handleTransactionDeleted
+                          }
+                        />
+                      )}
+                    </div>
                   )}
                 </div>
               </article>

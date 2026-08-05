@@ -3,6 +3,7 @@ import { Router } from "express";
 import { ensureAuthenticated } from "../../../middlewares/auth.middleware";
 import {
   createTransaction,
+  deleteTransaction,
   getTransactionById,
   listTransactions,
   updateTransaction,
@@ -16,5 +17,6 @@ transactionRoutes.post("/", createTransaction);
 transactionRoutes.get("/", listTransactions);
 transactionRoutes.get("/:id", getTransactionById);
 transactionRoutes.patch("/:id", updateTransaction);
+transactionRoutes.delete("/:id", deleteTransaction);
 
 export default transactionRoutes;

@@ -65,3 +65,11 @@ export function updateTransaction(
     data,
   });
 }
+
+export function deleteTransaction(transactionId: string) {
+  return prisma.transaction.delete({
+    where: {
+      id: transactionId,
+    },
+  });
+}
