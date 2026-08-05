@@ -1,6 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import { SummaryCard } from "@/components/summary-card";
 import { TransactionCounter } from "@/components/transaction-counter";
@@ -18,16 +22,38 @@ export interface Transaction {
   updatedAt: string;
 }
 
-export function DashboardContent() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+interface FinancialSummary {
+  income: number;
+  expense: number;
+  balance: number;
+}
 
-  const loadTransactions = useCallback(async () => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+const initialSummary: FinancialSummary = {
+  income: 0,
+  expense: 0,
+  balance: 0,
+};
+
+export function DashboardContent() {
+  const [transactions, setTransactions] = useState<
+    Transaction[]
+  >([]);
+
+  const [summary, setSummary] =
+    useState<FinancialSummary>(initialSummary);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] =
+    useState("");
+
+  const loadDashboardData = useCallback(async () => {
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL;
 
     if (!apiUrl) {
-      setErrorMessage("A URL da API não foi configurada.");
+      setErrorMessage(
+        "A URL da API não foi configurada.",
+      );
       setIsLoading(false);
       return;
     }
@@ -36,22 +62,44 @@ export function DashboardContent() {
       setIsLoading(true);
       setErrorMessage("");
 
-      const response = await fetch(`${apiUrl}/transactions`, {
-  credentials: "include",
-});
+      const [
+        transactionsResponse,
+        summaryResponse,
+      ] = await Promise.all([
+        fetch(`${apiUrl}/transactions`, {
+          credentials: "include",
+        }),
+        fetch(`${apiUrl}/transactions/summary`, {
+          credentials: "include",
+        }),
+      ]);
 
-      if (!response.ok) {
-        throw new Error("Não foi possível carregar as transações.");
+      if (
+        !transactionsResponse.ok ||
+        !summaryResponse.ok
+      ) {
+        throw new Error(
+          "Não foi possível carregar os dados financeiros.",
+        );
       }
 
-      const data = (await response.json()) as Transaction[];
+      const [transactionsData, summaryData] =
+        await Promise.all([
+          transactionsResponse.json() as Promise<
+            Transaction[]
+          >,
+          summaryResponse.json() as Promise<
+            FinancialSummary
+          >,
+        ]);
 
-      setTransactions(data);
+      setTransactions(transactionsData);
+      setSummary(summaryData);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Não foi possível conectar ao backend."
+          : "Não foi possível conectar ao backend.",
       );
     } finally {
       setIsLoading(false);
@@ -59,31 +107,8 @@ export function DashboardContent() {
   }, []);
 
   useEffect(() => {
-    loadTransactions();
-  }, [loadTransactions]);
-
-  const summary = useMemo(() => {
-    return transactions.reduce(
-      (totals, transaction) => {
-        const amount = Number(transaction.amount);
-
-        if (transaction.type === "INCOME") {
-          totals.income += amount;
-        } else {
-          totals.expense += amount;
-        }
-
-        totals.balance = totals.income - totals.expense;
-
-        return totals;
-      },
-      {
-        income: 0,
-        expense: 0,
-        balance: 0,
-      }
-    );
-  }, [transactions]);
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   function formatCurrency(value: number) {
     return value.toLocaleString("pt-BR", {
@@ -99,7 +124,9 @@ export function DashboardContent() {
           title="Saldo atual"
           value={formatCurrency(summary.balance)}
           valueClassName={
-            summary.balance < 0 ? "text-red-400" : "text-slate-100"
+            summary.balance < 0
+              ? "text-red-400"
+              : "text-slate-100"
           }
         />
 
@@ -118,13 +145,15 @@ export function DashboardContent() {
 
       <TransactionCounter />
 
-      <TransactionForm onTransactionCreated={loadTransactions} />
+      <TransactionForm
+        onTransactionCreated={loadDashboardData}
+      />
 
       <TransactionList
         transactions={transactions}
         isLoading={isLoading}
         errorMessage={errorMessage}
-        onRetry={loadTransactions}
+        onRetry={loadDashboardData}
       />
     </>
   );
