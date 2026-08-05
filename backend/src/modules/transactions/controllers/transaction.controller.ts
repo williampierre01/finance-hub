@@ -4,6 +4,7 @@ import {
   createTransaction as createTransactionService,
   deleteTransaction as deleteTransactionService,
   getTransactionById as getTransactionByIdService,
+  getTransactionSummary as getTransactionSummaryService,
   listPaginatedTransactions as listPaginatedTransactionsService,
   listTransactions as listTransactionsService,
   updateTransaction as updateTransactionService,
@@ -115,4 +116,16 @@ export async function deleteTransaction(
   );
 
   return response.status(204).send();
+}
+
+export async function getTransactionSummary(
+  request: Request,
+  response: Response,
+): Promise<Response> {
+  const userId = response.locals.userId as string;
+
+  const summary =
+    await getTransactionSummaryService(userId);
+
+  return response.status(200).json(summary);
 }
