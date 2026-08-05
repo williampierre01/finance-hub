@@ -6,6 +6,7 @@ import {
 
 import {
   createUser as createUserRepository,
+  deleteUser as deleteUserRepository,
   findUserByEmail,
   findUserById,
   findUserWithPasswordById,
@@ -29,6 +30,11 @@ interface ChangePasswordData {
   currentPassword: string;
   newPassword: string;
   passwordConfirmation: string;
+}
+
+interface DeleteUserData {
+  password: string;
+  confirmation: string;
 }
 
 export async function createUser({
@@ -179,7 +185,10 @@ export async function changeUserPassword(
   );
 
   if (!currentPasswordMatches) {
-    throw new AppError("A senha atual está incorreta", 401);
+    throw new AppError(
+      "A senha atual está incorreta",
+      401
+    );
   }
 
   const newPasswordIsCurrent = await comparePassword(
@@ -199,6 +208,38 @@ export async function changeUserPassword(
     userId,
     newPasswordHash
   );
+}
+
+export async function deleteUserAccount(
+  userId: string,
+  { password, confirmation }: DeleteUserData
+) {
+  if (!password) {
+    throw new AppError("Informe sua senha");
+  }
+
+  if (confirmation !== "EXCLUIR") {
+    throw new AppError(
+      'Digite "EXCLUIR" para confirmar a exclusão'
+    );
+  }
+
+  const user = await findUserWithPasswordById(userId);
+
+  if (!user || !user.passwordHash) {
+    throw new AppError("Usuário não encontrado", 404);
+  }
+
+  const passwordMatches = await comparePassword(
+    password,
+    user.passwordHash
+  );
+
+  if (!passwordMatches) {
+    throw new AppError("A senha está incorreta", 401);
+  }
+
+  return deleteUserRepository(userId);
 }
 
 export async function listUsers() {
