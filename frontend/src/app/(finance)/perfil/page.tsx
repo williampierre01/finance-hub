@@ -2,6 +2,7 @@
 
 import { useAuthenticatedUser } from "@/components/auth-guard";
 import { ChangePasswordForm } from "@/components/change-password-form";
+import { DeleteAccountForm } from "@/components/delete-account-form";
 import { PageHeader } from "@/components/page-header";
 import { ProfileUpdateForm } from "@/components/profile-update-form";
 
@@ -65,6 +66,8 @@ export default function ProfilePage() {
       <ProfileUpdateForm />
 
       <ChangePasswordForm />
+
+      <DeleteAccountForm />
     </>
   );
 }

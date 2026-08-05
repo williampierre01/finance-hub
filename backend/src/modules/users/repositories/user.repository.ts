@@ -85,6 +85,15 @@ export function updateUserPassword(
   });
 }
 
+export function deleteUser(userId: string) {
+  return prisma.user.delete({
+    where: {
+      id: userId,
+    },
+    select: publicUserFields,
+  });
+}
+
 export function listUsers() {
   return prisma.user.findMany({
     select: publicUserFields,

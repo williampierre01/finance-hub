@@ -4,6 +4,7 @@ import { ensureAuthenticated } from "../../../middlewares/auth.middleware";
 import {
   changeUserPassword,
   createUser,
+  deleteUserAccount,
   listUsers,
   updateUserProfile,
 } from "../controllers/user.controller";
@@ -22,6 +23,12 @@ userRoutes.patch(
   "/me",
   ensureAuthenticated,
   updateUserProfile
+);
+
+userRoutes.delete(
+  "/me",
+  ensureAuthenticated,
+  deleteUserAccount
 );
 
 userRoutes.get("/", listUsers);
