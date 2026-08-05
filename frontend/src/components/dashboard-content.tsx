@@ -26,12 +26,14 @@ interface FinancialSummary {
   income: number;
   expense: number;
   balance: number;
+  month: string | null;
 }
 
 const initialSummary: FinancialSummary = {
   income: 0,
   expense: 0,
   balance: 0,
+  month: null,
 };
 
 export function DashboardContent() {
@@ -42,7 +44,11 @@ export function DashboardContent() {
   const [summary, setSummary] =
     useState<FinancialSummary>(initialSummary);
 
+  const [selectedMonth, setSelectedMonth] =
+    useState("");
+
   const [isLoading, setIsLoading] = useState(true);
+
   const [errorMessage, setErrorMessage] =
     useState("");
 
@@ -58,6 +64,12 @@ export function DashboardContent() {
       return;
     }
 
+    const summaryUrl = selectedMonth
+      ? `${apiUrl}/transactions/summary?month=${encodeURIComponent(
+          selectedMonth,
+        )}`
+      : `${apiUrl}/transactions/summary`;
+
     try {
       setIsLoading(true);
       setErrorMessage("");
@@ -69,7 +81,7 @@ export function DashboardContent() {
         fetch(`${apiUrl}/transactions`, {
           credentials: "include",
         }),
-        fetch(`${apiUrl}/transactions/summary`, {
+        fetch(summaryUrl, {
           credentials: "include",
         }),
       ]);
@@ -104,7 +116,7 @@ export function DashboardContent() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [selectedMonth]);
 
   useEffect(() => {
     loadDashboardData();
@@ -117,9 +129,67 @@ export function DashboardContent() {
     });
   }
 
+  function formatSelectedMonth(month: string) {
+    if (!month) {
+      return "Todo o período";
+    }
+
+    const [year, monthNumber] = month
+      .split("-")
+      .map(Number);
+
+    return new Date(
+      year,
+      monthNumber - 1,
+      1,
+    ).toLocaleDateString("pt-BR", {
+      month: "long",
+      year: "numeric",
+    });
+  }
+
   return (
     <>
-      <div className="mt-10 grid gap-6 md:grid-cols-3">
+      <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900 p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <label
+              htmlFor="dashboard-month"
+              className="mb-2 block text-sm font-medium text-slate-300"
+            >
+              Período do resumo
+            </label>
+
+            <input
+              id="dashboard-month"
+              type="month"
+              value={selectedMonth}
+              onChange={(event) =>
+                setSelectedMonth(event.target.value)
+              }
+              className="rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-emerald-500"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setSelectedMonth("")}
+            disabled={!selectedMonth}
+            className="rounded-lg border border-slate-700 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:border-emerald-500 hover:text-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Mostrar todo o período
+          </button>
+        </div>
+
+        <p className="mt-4 text-sm text-slate-400">
+          Resumo exibido:{" "}
+          <strong className="text-slate-200">
+            {formatSelectedMonth(selectedMonth)}
+          </strong>
+        </p>
+      </section>
+
+      <div className="mt-6 grid gap-6 md:grid-cols-3">
         <SummaryCard
           title="Saldo atual"
           value={formatCurrency(summary.balance)}

@@ -124,8 +124,15 @@ export async function getTransactionSummary(
 ): Promise<Response> {
   const userId = response.locals.userId as string;
 
+  const month = request.query.month as
+    | string
+    | undefined;
+
   const summary =
-    await getTransactionSummaryService(userId);
+    await getTransactionSummaryService(
+      userId,
+      month,
+    );
 
   return response.status(200).json(summary);
 }
