@@ -4,6 +4,7 @@ import {
   createTransaction as createTransactionService,
   deleteTransaction as deleteTransactionService,
   getTransactionById as getTransactionByIdService,
+  getTransactionTotalsByCategory as getTransactionTotalsByCategoryService,
   getTransactionSummary as getTransactionSummaryService,
   listPaginatedTransactions as listPaginatedTransactionsService,
   listTransactions as listTransactionsService,
@@ -135,4 +136,24 @@ export async function getTransactionSummary(
     );
 
   return response.status(200).json(summary);
+}
+
+export async function getTransactionTotalsByCategory(
+  request: Request,
+  response: Response,
+): Promise<Response> {
+  const userId = response.locals.userId as string;
+
+  const { type, month } = request.query;
+
+  const categoryTotals =
+    await getTransactionTotalsByCategoryService({
+      userId,
+      type: type as string | undefined,
+      month: month as string | undefined,
+    });
+
+  return response
+    .status(200)
+    .json(categoryTotals);
 }
