@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 
+import { IncomeExpenseChart } from "@/components/income-expense-chart";
 import { MonthlyComparison } from "@/components/monthly-comparison";
 import { SummaryCard } from "@/components/summary-card";
 import { TransactionCounter } from "@/components/transaction-counter";
@@ -230,6 +231,16 @@ export function DashboardContent() {
           valueClassName="text-red-400"
         />
       </div>
+
+      {!isLoading && !errorMessage && (
+        <IncomeExpenseChart
+          income={summary.income}
+          expense={summary.expense}
+          periodLabel={formatSelectedMonth(
+            selectedMonth,
+          )}
+        />
+      )}
 
       {summary.month &&
         summary.previousMonth &&
