@@ -4,6 +4,7 @@ import {
   createTransaction as createTransactionService,
   deleteTransaction as deleteTransactionService,
   getTransactionById as getTransactionByIdService,
+  getTransactionMonthlyEvolution as getTransactionMonthlyEvolutionService,
   getTransactionTotalsByCategory as getTransactionTotalsByCategoryService,
   getTransactionSummary as getTransactionSummaryService,
   listPaginatedTransactions as listPaginatedTransactionsService,
@@ -156,4 +157,23 @@ export async function getTransactionTotalsByCategory(
   return response
     .status(200)
     .json(categoryTotals);
+}
+
+export async function getTransactionMonthlyEvolution(
+  request: Request,
+  response: Response,
+): Promise<Response> {
+  const userId = response.locals.userId as string;
+
+  const months = request.query.months as
+    | string
+    | undefined;
+
+  const evolution =
+    await getTransactionMonthlyEvolutionService(
+      userId,
+      months,
+    );
+
+  return response.status(200).json(evolution);
 }

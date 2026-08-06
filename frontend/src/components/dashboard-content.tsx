@@ -11,6 +11,10 @@ import {
   type ExpenseCategoryChartData,
 } from "@/components/expense-category-chart";
 import { IncomeExpenseChart } from "@/components/income-expense-chart";
+import {
+  MonthlyEvolutionChart,
+  type MonthlyEvolutionChartData,
+} from "@/components/monthly-evolution-chart";
 import { MonthlyComparison } from "@/components/monthly-comparison";
 import { SummaryCard } from "@/components/summary-card";
 import { TransactionCounter } from "@/components/transaction-counter";
@@ -70,6 +74,9 @@ export function DashboardContent() {
   const [expenseCategories, setExpenseCategories] =
     useState<ExpenseCategoryChartData[]>([]);
 
+  const [monthlyEvolution, setMonthlyEvolution] =
+    useState<MonthlyEvolutionChartData[]>([]);
+
   const [selectedMonth, setSelectedMonth] =
     useState("");
 
@@ -110,6 +117,7 @@ export function DashboardContent() {
         transactionsResponse,
         summaryResponse,
         categoriesResponse,
+        evolutionResponse,
       ] = await Promise.all([
         fetch(`${apiUrl}/transactions`, {
           credentials: "include",
@@ -120,12 +128,19 @@ export function DashboardContent() {
         fetch(categoriesUrl, {
           credentials: "include",
         }),
+        fetch(
+          `${apiUrl}/transactions/evolution?months=6`,
+          {
+            credentials: "include",
+          },
+        ),
       ]);
 
       if (
         !transactionsResponse.ok ||
         !summaryResponse.ok ||
-        !categoriesResponse.ok
+        !categoriesResponse.ok ||
+        !evolutionResponse.ok
       ) {
         throw new Error(
           "Não foi possível carregar os dados financeiros.",
@@ -136,6 +151,7 @@ export function DashboardContent() {
         transactionsData,
         summaryData,
         categoriesData,
+        evolutionData,
       ] = await Promise.all([
         transactionsResponse.json() as Promise<
           Transaction[]
@@ -146,11 +162,15 @@ export function DashboardContent() {
         categoriesResponse.json() as Promise<
           ExpenseCategoryChartData[]
         >,
+        evolutionResponse.json() as Promise<
+          MonthlyEvolutionChartData[]
+        >,
       ]);
 
       setTransactions(transactionsData);
       setSummary(summaryData);
       setExpenseCategories(categoriesData);
+      setMonthlyEvolution(evolutionData);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -272,6 +292,10 @@ export function DashboardContent() {
             periodLabel={formatSelectedMonth(
               selectedMonth,
             )}
+          />
+
+          <MonthlyEvolutionChart
+            data={monthlyEvolution}
           />
         </>
       )}

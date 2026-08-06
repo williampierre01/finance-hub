@@ -5,6 +5,7 @@ import {
   createTransaction,
   deleteTransaction,
   getTransactionById,
+  getTransactionMonthlyEvolution,
   getTransactionTotalsByCategory,
   getTransactionSummary,
   listPaginatedTransactions,
@@ -32,6 +33,11 @@ transactionRoutes.get(
 transactionRoutes.get(
   "/categories",
   getTransactionTotalsByCategory,
+);
+
+transactionRoutes.get(
+  "/evolution",
+  getTransactionMonthlyEvolution,
 );
 
 transactionRoutes.get(
