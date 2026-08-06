@@ -10,6 +10,7 @@ import {
   getTransactionSummary as getTransactionSummaryRepository,
   listPaginatedTransactions as listPaginatedTransactionsRepository,
   listTransactions as listTransactionsRepository,
+  listTransactionsForMonthlyEvolution as listTransactionsForMonthlyEvolutionRepository,
   updateTransaction as updateTransactionRepository,
 } from "../repositories/transaction.repository";
 
@@ -556,5 +557,113 @@ export async function getTransactionTotalsByCategory({
   return groupedTransactions.map((group) => ({
     category: group.category,
     total: Number(group._sum.amount ?? 0),
+  }));
+}
+
+function formatYearMonth(date: Date) {
+  return [
+    date.getUTCFullYear(),
+    String(date.getUTCMonth() + 1).padStart(
+      2,
+      "0",
+    ),
+  ].join("-");
+}
+
+export async function getTransactionMonthlyEvolution(
+  userId: string,
+  months = "6",
+) {
+  const parsedMonths = Number(months);
+
+  if (
+    !Number.isInteger(parsedMonths) ||
+    parsedMonths < 1 ||
+    parsedMonths > 24
+  ) {
+    throw new AppError(
+      "A quantidade de meses deve ser um número inteiro entre 1 e 24",
+    );
+  }
+
+  const now = new Date();
+
+  const startDate = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth() - parsedMonths + 1,
+      1,
+    ),
+  );
+
+  const endDate = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth() + 1,
+      1,
+    ),
+  );
+
+  const transactions =
+    await listTransactionsForMonthlyEvolutionRepository({
+      userId,
+      startDate,
+      endDate,
+    });
+
+  const evolution = Array.from(
+    {
+      length: parsedMonths,
+    },
+    (_, index) => {
+      const date = new Date(
+        Date.UTC(
+          startDate.getUTCFullYear(),
+          startDate.getUTCMonth() + index,
+          1,
+        ),
+      );
+
+      return {
+        month: formatYearMonth(date),
+        income: 0,
+        expense: 0,
+      };
+    },
+  );
+
+  const evolutionByMonth = new Map(
+    evolution.map((item) => [item.month, item]),
+  );
+
+  for (const transaction of transactions) {
+    const month = formatYearMonth(
+      transaction.createdAt,
+    );
+
+    const monthValues =
+      evolutionByMonth.get(month);
+
+    if (!monthValues) {
+      continue;
+    }
+
+    const amount = Number(transaction.amount);
+
+    if (transaction.type === TransactionType.INCOME) {
+      monthValues.income += amount;
+    }
+
+    if (
+      transaction.type === TransactionType.EXPENSE
+    ) {
+      monthValues.expense += amount;
+    }
+  }
+
+  return evolution.map((item) => ({
+    ...item,
+    income: Number(item.income.toFixed(2)),
+    expense: Number(item.expense.toFixed(2)),
   }));
 }

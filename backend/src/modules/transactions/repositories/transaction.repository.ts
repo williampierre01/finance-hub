@@ -36,6 +36,12 @@ interface GetTransactionTotalsByCategoryData {
   endDate?: Date;
 }
 
+interface ListTransactionsForMonthlyEvolutionData {
+  userId: string;
+  startDate: Date;
+  endDate: Date;
+}
+
 export function findUserById(userId: string) {
   return prisma.user.findUnique({
     where: {
@@ -214,6 +220,30 @@ export function getTransactionTotalsByCategory({
       _sum: {
         amount: "desc",
       },
+    },
+  });
+}
+
+export function listTransactionsForMonthlyEvolution({
+  userId,
+  startDate,
+  endDate,
+}: ListTransactionsForMonthlyEvolutionData) {
+  return prisma.transaction.findMany({
+    where: {
+      userId,
+      createdAt: {
+        gte: startDate,
+        lt: endDate,
+      },
+    },
+    select: {
+      amount: true,
+      type: true,
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: "asc",
     },
   });
 }
