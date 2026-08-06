@@ -6,6 +6,7 @@ import {
   deleteTransaction as deleteTransactionRepository,
   findTransactionById as findTransactionByIdRepository,
   findUserById,
+  getTransactionTotalsByCategory as getTransactionTotalsByCategoryRepository,
   getTransactionSummary as getTransactionSummaryRepository,
   listPaginatedTransactions as listPaginatedTransactionsRepository,
   listTransactions as listTransactionsRepository,
@@ -35,6 +36,12 @@ interface ListPaginatedTransactionsFilters {
   endDate?: string;
   page?: string;
   limit?: string;
+}
+
+interface GetTransactionTotalsByCategoryFilters {
+  userId: string;
+  type?: string;
+  month?: string;
 }
 
 export async function createTransaction(
@@ -491,4 +498,63 @@ export async function getTransactionSummary(
       ),
     },
   };
+}
+
+export async function getTransactionTotalsByCategory({
+  userId,
+  type,
+  month,
+}: GetTransactionTotalsByCategoryFilters) {
+  if (
+    type !== "income" &&
+    type !== "expense"
+  ) {
+    throw new AppError(
+      "O tipo deve ser income ou expense",
+    );
+  }
+
+  let startDate: Date | undefined;
+  let endDate: Date | undefined;
+
+  if (month) {
+    const validMonthFormat =
+      /^\d{4}-(0[1-9]|1[0-2])$/.test(month);
+
+    if (!validMonthFormat) {
+      throw new AppError(
+        "O mês deve estar no formato AAAA-MM",
+      );
+    }
+
+    const [year, monthNumber] = month
+      .split("-")
+      .map(Number);
+
+    startDate = new Date(
+      Date.UTC(year, monthNumber - 1, 1),
+    );
+
+    endDate = new Date(
+      Date.UTC(year, monthNumber, 1),
+    );
+  }
+
+  const transactionType =
+    type === "income"
+      ? TransactionType.INCOME
+      : TransactionType.EXPENSE;
+
+  const groupedTransactions =
+    await getTransactionTotalsByCategoryRepository({
+      userId,
+      type: transactionType,
+      startDate,
+      endDate,
+    });
+
+  return groupedTransactions.map((group) => ({
+    category: group.category,
+    total: Number(group._sum.amount ?? 0),
+  }));
 }

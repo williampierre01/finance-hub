@@ -6,6 +6,10 @@ import {
   useState,
 } from "react";
 
+import {
+  ExpenseCategoryChart,
+  type ExpenseCategoryChartData,
+} from "@/components/expense-category-chart";
 import { IncomeExpenseChart } from "@/components/income-expense-chart";
 import { MonthlyComparison } from "@/components/monthly-comparison";
 import { SummaryCard } from "@/components/summary-card";
@@ -63,6 +67,9 @@ export function DashboardContent() {
   const [summary, setSummary] =
     useState<FinancialSummary>(initialSummary);
 
+  const [expenseCategories, setExpenseCategories] =
+    useState<ExpenseCategoryChartData[]>([]);
+
   const [selectedMonth, setSelectedMonth] =
     useState("");
 
@@ -89,6 +96,12 @@ export function DashboardContent() {
         )}`
       : `${apiUrl}/transactions/summary`;
 
+    const categoriesUrl = selectedMonth
+      ? `${apiUrl}/transactions/categories?type=expense&month=${encodeURIComponent(
+          selectedMonth,
+        )}`
+      : `${apiUrl}/transactions/categories?type=expense`;
+
     try {
       setIsLoading(true);
       setErrorMessage("");
@@ -96,6 +109,7 @@ export function DashboardContent() {
       const [
         transactionsResponse,
         summaryResponse,
+        categoriesResponse,
       ] = await Promise.all([
         fetch(`${apiUrl}/transactions`, {
           credentials: "include",
@@ -103,29 +117,40 @@ export function DashboardContent() {
         fetch(summaryUrl, {
           credentials: "include",
         }),
+        fetch(categoriesUrl, {
+          credentials: "include",
+        }),
       ]);
 
       if (
         !transactionsResponse.ok ||
-        !summaryResponse.ok
+        !summaryResponse.ok ||
+        !categoriesResponse.ok
       ) {
         throw new Error(
           "Não foi possível carregar os dados financeiros.",
         );
       }
 
-      const [transactionsData, summaryData] =
-        await Promise.all([
-          transactionsResponse.json() as Promise<
-            Transaction[]
-          >,
-          summaryResponse.json() as Promise<
-            FinancialSummary
-          >,
-        ]);
+      const [
+        transactionsData,
+        summaryData,
+        categoriesData,
+      ] = await Promise.all([
+        transactionsResponse.json() as Promise<
+          Transaction[]
+        >,
+        summaryResponse.json() as Promise<
+          FinancialSummary
+        >,
+        categoriesResponse.json() as Promise<
+          ExpenseCategoryChartData[]
+        >,
+      ]);
 
       setTransactions(transactionsData);
       setSummary(summaryData);
+      setExpenseCategories(categoriesData);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -233,13 +258,22 @@ export function DashboardContent() {
       </div>
 
       {!isLoading && !errorMessage && (
-        <IncomeExpenseChart
-          income={summary.income}
-          expense={summary.expense}
-          periodLabel={formatSelectedMonth(
-            selectedMonth,
-          )}
-        />
+        <>
+          <IncomeExpenseChart
+            income={summary.income}
+            expense={summary.expense}
+            periodLabel={formatSelectedMonth(
+              selectedMonth,
+            )}
+          />
+
+          <ExpenseCategoryChart
+            data={expenseCategories}
+            periodLabel={formatSelectedMonth(
+              selectedMonth,
+            )}
+          />
+        </>
       )}
 
       {summary.month &&

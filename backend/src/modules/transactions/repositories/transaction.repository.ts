@@ -29,6 +29,13 @@ interface ListPaginatedTransactionsData {
   take: number;
 }
 
+interface GetTransactionTotalsByCategoryData {
+  userId: string;
+  type: TransactionType;
+  startDate?: Date;
+  endDate?: Date;
+}
+
 export function findUserById(userId: string) {
   return prisma.user.findUnique({
     where: {
@@ -176,6 +183,37 @@ export function getTransactionSummary(
     },
     _sum: {
       amount: true,
+    },
+  });
+}
+
+export function getTransactionTotalsByCategory({
+  userId,
+  type,
+  startDate,
+  endDate,
+}: GetTransactionTotalsByCategoryData) {
+  return prisma.transaction.groupBy({
+    by: ["category"],
+    where: {
+      userId,
+      type,
+      ...(startDate && endDate
+        ? {
+            createdAt: {
+              gte: startDate,
+              lt: endDate,
+            },
+          }
+        : {}),
+    },
+    _sum: {
+      amount: true,
+    },
+    orderBy: {
+      _sum: {
+        amount: "desc",
+      },
     },
   });
 }
